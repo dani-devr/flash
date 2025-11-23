@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flash Cases - Ultimate Simulator</title>
+    <title>Flash Cases - Tuti Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -11,8 +11,7 @@
 
         :root {
             --primary: #f59e0b;
-            --bg-dark: #0b0f19;
-            --bg-card: #151b2b;
+            --bg-dark: #050505;
         }
 
         body {
@@ -27,25 +26,20 @@
             text-transform: uppercase;
         }
 
-        /* --- Animations --- */
-        .pop-in { animation: popIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
-        @keyframes popIn { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
-        
-        .fade-in-up { animation: fadeInUp 0.5s ease-out forwards; }
-        @keyframes fadeInUp { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
         /* --- Components --- */
         .case-card {
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            background: linear-gradient(145deg, #1a2236, #111623);
+            cursor: pointer;
+            background: radial-gradient(circle at center, #1a1a1a, #000);
+            border: 1px solid #333;
         }
         .case-card:hover {
-            transform: translateY(-8px);
-            box-shadow: 0 20px 40px -5px rgba(245, 158, 11, 0.15);
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px -5px rgba(245, 158, 11, 0.1);
             border-color: var(--primary);
         }
 
-        /* --- Game Spinner --- */
+        /* Spinner */
         .spinner-container {
             position: relative;
             width: 100%;
@@ -53,123 +47,116 @@
             height: 220px;
             margin: 0 auto;
             overflow: hidden;
-            background: #0f1219;
+            background: #080808;
             border-radius: 12px;
-            border: 1px solid #334155;
-            box-shadow: inset 0 0 60px rgba(0,0,0,0.9);
+            border: 1px solid #333;
+            box-shadow: inset 0 0 60px rgba(0,0,0,1);
         }
-        
         .spinner-overlay-left, .spinner-overlay-right {
             position: absolute; top: 0; bottom: 0; width: 150px; z-index: 5; pointer-events: none;
         }
-        .spinner-overlay-left { left: 0; background: linear-gradient(to right, #0f1219 0%, transparent 100%); }
-        .spinner-overlay-right { right: 0; background: linear-gradient(to left, #0f1219 0%, transparent 100%); }
-
-        /* Improved Arrow Indicator for Case Spinner */
-        .center-arrow {
-            position: absolute;
-            left: 50%;
-            top: 0;
-            bottom: 0;
-            z-index: 10;
-            transform: translateX(-50%);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: space-between;
-            pointer-events: none;
+        .spinner-overlay-left { left: 0; background: linear-gradient(to right, #050505 0%, transparent 100%); }
+        .spinner-overlay-right { right: 0; background: linear-gradient(to left, #050505 0%, transparent 100%); }
+        .center-line {
+            position: absolute; left: 50%; top: 0; bottom: 0; width: 2px; background: #eab308; z-index: 10;
+            transform: translateX(-50%); box-shadow: 0 0 15px #eab308;
         }
-        .arrow-head {
-            width: 0; height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-top: 15px solid #f59e0b;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.5));
-        }
-        .arrow-line {
-            width: 2px;
-            flex-grow: 1;
-            background: linear-gradient(to bottom, #f59e0b, transparent, #f59e0b);
-            box-shadow: 0 0 10px #f59e0b;
-        }
-        .arrow-tail {
-            width: 0; height: 0;
-            border-left: 12px solid transparent;
-            border-right: 12px solid transparent;
-            border-bottom: 15px solid #f59e0b;
-            filter: drop-shadow(0 -4px 4px rgba(0,0,0,0.5));
-        }
-
         .items-strip { display: flex; height: 100%; align-items: center; will-change: transform; }
 
-        /* --- Upgrader Wheel --- */
-        .upgrade-wheel-container {
+        /* Items */
+        .weapon-img { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: transform 0.3s ease; }
+        .item-card-base:hover .weapon-img { transform: scale(1.1) rotate(-2deg); }
+
+        /* UPGRADER WHEEL */
+        .wheel-container {
             position: relative;
             width: 300px;
             height: 300px;
+            border-radius: 50%;
+            background: #111;
+            border: 8px solid #222;
+            box-shadow: 0 0 50px rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
         }
-        .upgrade-marker {
+
+        /* The spinning part */
+        .wheel-spinner {
             position: absolute;
-            top: -15px;
+            inset: 0;
+            border-radius: 50%;
+            background: conic-gradient(var(--primary) 0deg, var(--primary) var(--angle), #0a0a0a var(--angle), #0a0a0a 360deg);
+            transition: transform 5s cubic-bezier(0.1, 0, 0.05, 1);
+        }
+
+        /* The inner cutout to make it a ring */
+        .wheel-inner {
+            position: absolute;
+            width: 260px;
+            height: 260px;
+            border-radius: 50%;
+            background: #050505;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+        }
+
+        /* The Fixed Arrow */
+        .wheel-arrow {
+            position: absolute;
+            top: -10px;
             left: 50%;
             transform: translateX(-50%);
+            width: 0; 
+            height: 0; 
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 25px solid #fff;
             z-index: 20;
-            filter: drop-shadow(0 4px 4px rgba(0,0,0,0.8));
-        }
-        .upgrade-wheel {
-            width: 100%;
-            height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(var(--primary) 0deg, var(--primary) var(--angle), #1e293b var(--angle), #1e293b 360deg);
-            position: relative;
-            transform: rotate(0deg); /* JS animates this */
-            border: 4px solid #334155;
-            box-shadow: 0 0 50px rgba(0,0,0,0.5);
-        }
-        .upgrade-inner-bg {
-            position: absolute; inset: 10px; border-radius: 50%; background: #0f1219; z-index: 2;
-            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            filter: drop-shadow(0 0 10px #fff);
         }
 
-        /* --- Item Styling --- */
-        .weapon-img { filter: drop-shadow(0 8px 12px rgba(0,0,0,0.6)); transition: transform 0.2s; }
-        .weapon-img:hover { transform: scale(1.05); }
+        /* Rarity Colors */
+        .rarity-consumer { border-color: #747474; --glow: #747474; }
+        .rarity-mil-spec { border-color: #2b60b5; --glow: #2b60b5; }
+        .rarity-restricted { border-color: #6a3cbd; --glow: #6a3cbd; }
+        .rarity-classified { border-color: #b026c4; --glow: #b026c4; }
+        .rarity-covert { border-color: #cc2323; --glow: #cc2323; }
+        .rarity-gold { border-color: #e8b80e; --glow: #e8b80e; }
 
-        .rarity-consumer { --color: #b0c3d9; }
-        .rarity-mil-spec { --color: #3b82f6; }
-        .rarity-restricted { --color: #8b5cf6; }
-        .rarity-classified { --color: #d946ef; }
-        .rarity-covert { --color: #ef4444; }
-        .rarity-gold { --color: #eab308; }
+        .glow-text { text-shadow: 0 0 10px var(--glow); color: var(--glow); }
+        .pop-in { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
+        @keyframes popIn { from { transform: scale(0.8) translateY(20px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
 
-        .border-rarity { border-color: var(--color); }
-        .text-rarity { color: var(--color); }
-        .shadow-rarity { box-shadow: 0 0 15px var(--color); }
-        .bg-rarity-glow { background: radial-gradient(circle, var(--color) 0%, transparent 70%); opacity: 0.15; }
-
-        /* Scrollbar */
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0b0f19; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+        /* Toggle Switch */
+        .toggle-checkbox:checked { right: 0; border-color: #f59e0b; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #f59e0b; }
+        
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #333; }
     </style>
 </head>
-<body class="flex flex-col min-h-screen">
+<body>
 
-    <!-- Navigation -->
-    <nav class="bg-slate-900/90 backdrop-blur-md border-b border-slate-800 sticky top-0 z-50">
-        <div class="max-w-[1600px] mx-auto px-4">
+    <nav class="bg-black/80 backdrop-blur border-b border-white/10 sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex items-center justify-between h-20">
                 <div class="flex items-center gap-8">
-                    <div onclick="router.navigate('home')" class="flex items-center gap-2 cursor-pointer group select-none">
+                    <div onclick="router.navigate('home')" class="flex items-center gap-2 cursor-pointer group">
                         <div class="bg-amber-500/10 p-2 rounded-lg group-hover:bg-amber-500/20 transition">
                             <i data-lucide="zap" class="text-amber-500 w-6 h-6 group-hover:scale-110 transition-transform"></i>
                         </div>
                         <span class="text-2xl font-bold brand-font text-white tracking-wide">Flash<span class="text-amber-500">Cases</span></span>
                     </div>
-                    <div class="hidden lg:flex items-center gap-1 bg-slate-800/50 p-1 rounded-lg border border-slate-700">
-                        <button onclick="router.navigate('home')" class="px-5 py-2 rounded-md text-sm font-bold transition hover:bg-slate-700 hover:text-white text-slate-300">CASES</button>
-                        <button onclick="router.navigate('upgrader')" class="px-5 py-2 rounded-md text-sm font-bold transition hover:bg-slate-700 hover:text-white text-slate-300">UPGRADER</button>
-                        <button onclick="router.navigate('inventory')" class="px-5 py-2 rounded-md text-sm font-bold transition hover:bg-slate-700 hover:text-white text-slate-300">INVENTORY</button>
+                    <div class="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/5">
+                        <button onclick="router.navigate('home')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300">Cases</button>
+                        <button onclick="router.navigate('upgrader')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300">Upgrader</button>
+                        <button onclick="router.navigate('inventory')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300">Inventory</button>
                     </div>
                 </div>
                 <div id="auth-section" class="flex items-center gap-4"></div>
@@ -177,653 +164,628 @@
         </div>
     </nav>
 
-    <div class="flex flex-1 max-w-[1600px] mx-auto w-full">
-        
-        <!-- MAIN CONTENT -->
-        <main id="app-root" class="flex-1 px-4 py-8 overflow-hidden min-h-[80vh]">
-            <!-- Router injects here -->
-        </main>
+    <main id="app-root" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 min-h-[80vh]"></main>
 
-        <!-- RIGHT SIDEBAR: LIVE FEED -->
-        <aside class="hidden xl:flex w-80 border-l border-slate-800 bg-slate-900/30 flex-col h-[calc(100vh-5rem)] sticky top-20">
-            <div class="p-4 border-b border-slate-800 flex items-center justify-between">
-                <div class="flex items-center gap-2">
-                    <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                    <span class="font-bold text-slate-300 text-sm tracking-wide uppercase">Live Drops</span>
-                </div>
-                <i data-lucide="activity" class="w-4 h-4 text-slate-500"></i>
-            </div>
-            <div id="live-feed" class="flex-1 overflow-y-auto p-2 space-y-2 scroll-smooth">
-                <!-- Live drops injected here -->
-            </div>
-        </aside>
-    </div>
-
-    <!-- --- MODALS --- -->
-
-    <!-- Login Modal -->
-    <div id="login-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/90 backdrop-blur-sm">
-        <div class="bg-slate-800 p-8 rounded-2xl border border-slate-700 w-full max-w-md shadow-2xl pop-in relative">
-            <button onclick="ui.closeModal('login-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
-            <h2 class="text-3xl font-bold brand-font mb-2 text-white">Player Login</h2>
-            <p class="text-slate-400 mb-6 text-sm">Enter a username to simulate the experience.</p>
+    <div id="login-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
+        <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative">
+            <h2 class="text-3xl font-bold brand-font mb-2">Login</h2>
             <form onsubmit="auth.login(event)">
-                <input type="text" id="login-user" class="w-full bg-slate-900 border border-slate-700 rounded-lg p-4 mb-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
-                <button type="submit" class="w-full bg-amber-500 hover:bg-amber-400 text-slate-900 font-black uppercase py-4 rounded-lg transition">Start Playing</button>
+                <div class="space-y-4">
+                    <input type="text" id="login-user" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-wider py-4 rounded-lg transition mt-2">Start</button>
+                </div>
             </form>
+            <button onclick="ui.closeModal('login-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
         </div>
     </div>
 
-    <!-- Drop Modal -->
-    <div id="drop-modal" class="fixed inset-0 z-[100] hidden flex items-center justify-center bg-black/95 backdrop-blur-md" onclick="ui.closeModal('drop-modal')">
-        <div class="text-center relative w-full max-w-2xl p-4 transform transition-all duration-500 scale-90 opacity-0" id="drop-content" onclick="event.stopPropagation()">
-            <h2 id="drop-title" class="text-6xl md:text-7xl font-black text-white mb-2 drop-shadow-2xl brand-font italic">DROPPED!</h2>
-            <div class="relative flex justify-center my-12 group">
-                <div id="drop-glow" class="absolute inset-0 bg-amber-500/30 blur-[80px] rounded-full"></div>
-                <div id="drop-image" class="relative z-10 transform transition-transform duration-500 hover:scale-110"></div>
-            </div>
-            <div id="drop-info" class="mb-10 relative z-20">
-                <h3 class="text-3xl font-black text-white mb-2 uppercase tracking-wide">Item Name</h3>
-                <p class="text-2xl font-mono text-amber-400 font-bold bg-slate-900/50 inline-block px-4 py-1 rounded border border-slate-700">$0.00</p>
-            </div>
-            <div class="flex justify-center gap-4 pointer-events-auto relative z-20">
-                <button onclick="game.sellCurrentDrop()" class="bg-slate-800 hover:bg-slate-700 text-white px-8 py-3 rounded-lg font-bold border border-slate-600">Sell Item</button>
-                <button onclick="ui.closeModal('drop-modal')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 px-8 py-3 rounded-lg font-bold shadow-[0_0_20px_rgba(245,158,11,0.4)]">Keep Item</button>
+    <div id="drop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/95 backdrop-blur-md" onclick="ui.closeModal('drop-modal')">
+        <div class="text-center w-full max-w-5xl p-4" id="drop-content" onclick="event.stopPropagation()">
+            <h2 id="drop-title" class="text-6xl md:text-8xl font-black text-white mb-8 drop-shadow-[0_0_25px_rgba(255,255,255,0.1)] brand-font tracking-widest italic transform -skew-x-6">DROPPED!</h2>
+            
+            <div id="drop-grid" class="flex flex-wrap justify-center gap-6 mb-10">
+                </div>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="game.sellAllDrops()" class="bg-zinc-800 hover:bg-zinc-700 text-slate-300 px-10 py-4 rounded-xl font-bold transition border border-zinc-700 flex items-center gap-2">
+                    <i data-lucide="dollar-sign" class="w-5 h-5 text-red-400"></i> Sell All
+                </button>
+                <button onclick="ui.closeModal('drop-modal')" class="bg-amber-600 hover:bg-amber-500 text-black px-10 py-4 rounded-xl font-bold transition flex items-center gap-2">
+                    <i data-lucide="backpack" class="w-5 h-5"></i> Keep All
+                </button>
             </div>
         </div>
     </div>
 
     <script>
-        // --- 1. MASSIVE ASSET DATABASE (50+ Items) ---
-        // Using CDN URLs for real skins
-        const SKINS = [
-            { name: 'AK-47 | Asiimov', img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'AK-47 | Redline', img: 'https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' }, // Using generic for demo logic, replaced below with specific simulation
-            { name: 'AWP | Dragon Lore', img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO' },
-            { name: 'AWP | Medusa', img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO' }, // Placeholder fallback logic used in UI
-        ];
-
-        // Real URLs mapped for demo (simulated 50 distinct items via array generation for code brevity)
-        // I will generate a rich database of 50 items with specific properties manually
-        
-        const WEAPON_DB = [
-            // --- KNIVES ---
-            { name: 'Karambit | Fade', rarity: 'gold', price: 1500.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'M9 Bayonet | Doppler', rarity: 'gold', price: 1200.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'Butterfly Knife | Marble Fade', rarity: 'gold', price: 1800.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
+        // --- ASSETS & DATA ---
+        const ASSETS = {
+            ak47: "https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9hazQ3X2N1X2FrNDdfbmlnaHR3aXNoX2xpZ2h0LjA4YTY1NjE1ZDdjZGYyZjhkNGQ2NTBmOTk5OWZjOTQxNjlmZjg3MjgucG5n/auto/auto/85/notrim/5c08a9a697a566343389a078253f7fe3.webp",
+            ssg: "https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9zc2cwOF9jdV9zc2cwOF9kcmFnb25maXJlX3Njb3BlX2xpZ2h0Ljk4YTMzN2UwNWUzOTVjYTk0ZGE4NDMyZWI1YTYyNzk5YjU0ZDVmOTAucG5n/auto/auto/85/notrim/0cb86d8f5487f2f6fbd2664ee52a3308.webp",
+            awp: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f",
+            m4a4: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f",
+            glock: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f",
             
-            // --- RIFLES ---
-            { name: 'AK-47 | Wild Lotus', rarity: 'covert', price: 2500.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'AK-47 | Gold Arabesque', rarity: 'covert', price: 3000.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'M4A4 | Howl', rarity: 'covert', price: 4000.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'AWP | Gungnir', rarity: 'covert', price: 6000.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'AWP | Dragon Lore', rarity: 'covert', price: 8000.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'M4A1-S | Printstream', rarity: 'classified', price: 150.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'AK-47 | Vulcan', rarity: 'classified', price: 400.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
+            // Knives
+            k1: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf3qr3czxb49KzgL-Kmsj2P7rSnXtU6dd9teTA5475jV2urhcDPzCkfMKLcAE-aV3R-lO5l-e61sfqvZ2fyiBgvikqsXiMyRGw1U1Ja-dm06adSULeWfJvEZCxug/144x",
+            k2: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf3qr3czxb49KzgL-KlsjyMr_UqWdY781lxLnFoNygiwfnqUNla2ihJ4XGclNqZ17U_Vm7yO7v1MPpu5mYzHBr6CI8pSGKferYZ_4/144x",
+            k3: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf1f_BYQJD4eOym5Cbm_LmDKvZl3hUufp9g-7J4cKti1Hm8xJkZ22lcNKSIwE6NQnUr1S7xLu5hZ676MiYnXtmuSBx537bgVXp1gHAfnds/144x",
+            k4: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJfw-bbeQJD4eO7lZKAkvPLJqvuzztu5Mx2gv2P99jz0AGyrUJoYW70IoWdIQ5sYV_Zrge-w-nr1pG8vZTBziRk7yJwsWGdwUJxuOAg0g/144x",
 
-            // --- MID TIER ---
-            { name: 'USP-S | Kill Confirmed', rarity: 'covert', price: 80.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'Glock-18 | Fade', rarity: 'restricted', price: 1200.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'Desert Eagle | Blaze', rarity: 'restricted', price: 600.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'MAC-10 | Disco Tech', rarity: 'classified', price: 15.00, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
+            // Cases
+            caseLow: "https://media.csgo-skins.com/container/low-case.png",
+            caseMed: "https://media.csgo-skins.com/container/medium-case.png",
+            caseHigh: "https://media.csgo-skins.com/container/ember-case.png",
+            caseKnife: "https://media.csgo-skins.com/container/knife-case.png?v2"
+        };
 
-            // --- LOW TIER / FILLER (Simulated via generic assets due to url limit, but named distinctly) ---
-            { name: 'P250 | Sand Dune', rarity: 'consumer', price: 0.05, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'MP9 | Storm', rarity: 'consumer', price: 0.03, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-            { name: 'SG 553 | Army Sheen', rarity: 'consumer', price: 0.04, img: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f' },
-        ];
-
-        // Helper to get an item by roughly matching name or fallback
-        function getItem(name) {
-            const specific = WEAPON_DB.find(i => i.name === name);
-            if(specific) return specific;
-            // Fallback for demo: use random mid tier
-            return WEAPON_DB[Math.floor(Math.random() * WEAPON_DB.length)];
-        }
-
-        // Construct the Case Database
         const DB = {
             cases: [
                 {
-                    id: 'case_revolution',
-                    name: 'Revolution Case',
-                    price: 2.50,
-                    image: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f',
-                    color: 'border-amber-500',
+                    id: 'case_low', name: 'Low Grade', price: 2.50, image: ASSETS.caseLow, color: 'border-slate-500',
                     items: [
-                        { name: 'MP9 | Feather', rarity: 'consumer', price: 0.10, img: WEAPON_DB[15].img },
-                        { name: 'MAG-7 | Rust', rarity: 'consumer', price: 0.15, img: WEAPON_DB[15].img },
-                        { name: 'P250 | Re.built', rarity: 'mil-spec', price: 0.80, img: WEAPON_DB[15].img },
-                        { name: 'M4A1-S | Emphorosaur', rarity: 'restricted', price: 4.50, img: WEAPON_DB[8].img },
-                        { name: 'AWP | Duality', rarity: 'classified', price: 25.00, img: WEAPON_DB[6].img },
-                        { name: 'AK-47 | Head Shot', rarity: 'covert', price: 180.00, img: WEAPON_DB[3].img },
-                        { name: 'Gloves | Spearmint', rarity: 'gold', price: 1500.00, img: WEAPON_DB[1].img }
+                        { name: 'MP9 | Sand', rarity: 'consumer', price: 0.03, img: ASSETS.ssg, filter: 'grayscale(100%)' },
+                        { name: 'P250 | Boreal', rarity: 'consumer', price: 0.05, img: ASSETS.glock, filter: 'grayscale(100%) brightness(0.5)' },
+                        { name: 'AK-47 | Slate', rarity: 'restricted', price: 2.50, img: ASSETS.ak47, filter: 'grayscale(100%) brightness(0.2)' },
+                        { name: 'AWP | Atheris', rarity: 'classified', price: 12.00, img: ASSETS.awp, filter: 'hue-rotate(100deg)' },
+                        { name: 'Karambit | Forest', rarity: 'gold', price: 150.00, img: ASSETS.k1, filter: 'grayscale(100%) brightness(0.7)' }
                     ]
                 },
                 {
-                    id: 'case_dream',
-                    name: 'Dream Collection',
-                    price: 50.00,
-                    image: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f',
-                    color: 'border-emerald-500',
+                    id: 'case_high', name: 'Ember Grade', price: 50.00, image: ASSETS.caseHigh, color: 'border-amber-600',
                     items: [
-                         { name: 'Desert Eagle | Blaze', rarity: 'restricted', price: 600.00, img: WEAPON_DB[12].img },
-                         { name: 'AK-47 | Wild Lotus', rarity: 'covert', price: 2500.00, img: WEAPON_DB[3].img },
-                         { name: 'AWP | Dragon Lore', rarity: 'gold', price: 8000.00, img: WEAPON_DB[7].img }
+                        { name: 'Glock-18 | Fade', rarity: 'restricted', price: 15.00, img: ASSETS.glock, filter: 'hue-rotate(320deg) saturate(200%)' }, 
+                        { name: 'M4A4 | Howl', rarity: 'covert', price: 2000.00, img: ASSETS.m4a4, filter: 'hue-rotate(10deg) brightness(0.8) contrast(1.5)' },
+                        { name: 'Karambit | Ruby', rarity: 'gold', price: 4000.00, img: ASSETS.k1, filter: 'hue-rotate(340deg) saturate(400%)' }
                     ]
                 },
                 {
-                    id: 'case_cobble',
-                    name: 'Cobblestone',
-                    price: 20.00,
-                    image: 'https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f',
-                    color: 'border-indigo-500',
+                    id: 'case_knife', name: 'Knife Crate', price: 900.00, image: ASSETS.caseKnife, color: 'border-red-600',
                     items: [
-                        { name: 'USP-S | Royal Blue', rarity: 'mil-spec', price: 5.00, img: WEAPON_DB[10].img },
-                        { name: 'M4A1-S | Knight', rarity: 'classified', price: 1200.00, img: WEAPON_DB[8].img },
-                        { name: 'AWP | Dragon Lore', rarity: 'covert', price: 8000.00, img: WEAPON_DB[7].img }
+                        // THE LOSSES (9 Items < $900)
+                        { name: 'Navaja | Safari', rarity: 'gold', price: 60.00, img: ASSETS.k4, filter: 'grayscale(100%) sepia(80%)' },
+                        { name: 'Gut | Boreal', rarity: 'gold', price: 75.00, img: ASSETS.k2, filter: 'grayscale(100%)' },
+                        { name: 'Shadow | Rust', rarity: 'gold', price: 90.00, img: ASSETS.k3, filter: 'sepia(80%) contrast(1.2)' },
+                        { name: 'Falchion | Urban', rarity: 'gold', price: 110.00, img: ASSETS.k4, filter: 'grayscale(100%) brightness(1.2)' },
+                        { name: 'Flip | Scorched', rarity: 'gold', price: 150.00, img: ASSETS.k2, filter: 'grayscale(100%) brightness(0.4)' },
+                        { name: 'Bayonet | Forest', rarity: 'gold', price: 250.00, img: ASSETS.k3, filter: 'grayscale(100%) sepia(20%)' },
+                        { name: 'Huntsman | Blue', rarity: 'gold', price: 350.00, img: ASSETS.k4, filter: 'hue-rotate(180deg)' },
+                        { name: 'M9 | Damacus', rarity: 'gold', price: 600.00, img: ASSETS.k2, filter: 'contrast(0.8)' },
+                        { name: 'Butterfly | Stained', rarity: 'gold', price: 800.00, img: ASSETS.k3, filter: 'brightness(1.1)' },
+                        // THE PROFIT (1 Item > $900)
+                        { name: 'Karambit | SAPPHIRE', rarity: 'gold', price: 5000.00, img: ASSETS.k1, filter: 'hue-rotate(220deg) saturate(300%) contrast(1.2)' }
                     ]
                 }
             ],
-            renderItem: (item, sizeClass="w-32 h-24") => {
-                 return `<img src="${item.img}" class="${sizeClass} object-contain weapon-img" alt="${item.name}">`;
-            }
-        };
-
-        // --- 2. CORE STATE ---
-        const store = {
-            user: JSON.parse(localStorage.getItem('flash_user')) || { username: null, balance: 2000.00, inventory: [], xp: 0 },
-            save: () => localStorage.setItem('flash_user', JSON.stringify(store.user)),
-        };
-
-        // --- 3. LOGIC ---
-        const engine = {
-            login: (name) => { store.user.username = name; store.save(); router.navigate('home'); },
-            addFunds: () => { store.user.balance += 500; store.save(); ui.updateAuth(); },
-            
-            openCase: (id) => {
-                const c = DB.cases.find(x => x.id === id);
-                if(store.user.balance < c.price) return { error: 'Insufficient Funds' };
-                
-                store.user.balance -= c.price;
-                
-                const rand = Math.random();
-                let tier = 'consumer';
-                if(rand < 0.005) tier = 'gold';
-                else if(rand < 0.02) tier = 'covert';
-                else if(rand < 0.05) tier = 'classified';
-                else if(rand < 0.20) tier = 'restricted';
-                else if(rand < 0.50) tier = 'mil-spec';
-                
-                let pool = c.items.filter(i => i.rarity === tier);
-                if(pool.length === 0) pool = c.items;
-                
-                const item = { ...pool[Math.floor(Math.random() * pool.length)], uid: Date.now() };
-                store.user.inventory.push(item);
-                store.user.xp += c.price;
-                store.save();
-                ui.updateAuth();
-                return { success: true, item };
+            renderItem: (item, sizeClass = "w-32 h-24") => {
+                return `<img src="${item.img}" class="${sizeClass} object-contain weapon-img" style="filter: ${item.filter || 'none'}" alt="${item.name}">`;
             },
-
-            upgrade: (itemUid, multiplier) => {
-                const idx = store.user.inventory.findIndex(i => i.uid === itemUid);
-                if(idx === -1) return { error: true };
-                
-                const inputItem = store.user.inventory[idx];
-                store.user.inventory.splice(idx, 1); // burn item
-                
-                const targetPrice = inputItem.price * multiplier;
-                const winChance = (1 / multiplier) * 0.90; // 10% House edge
-                
-                const roll = Math.random(); // 0.0 to 1.0
-                const win = roll < winChance;
-
-                let wonItem = null;
-                if(win) {
-                    // Find a nice skin close to price
-                    wonItem = { ...WEAPON_DB.reduce((prev, curr) => Math.abs(curr.price - targetPrice) < Math.abs(prev.price - targetPrice) ? curr : prev), uid: Date.now() };
-                    store.user.inventory.push(wonItem);
-                }
-                store.save();
-                
-                // Calculate visual angle for wheel
-                // If winChance is 0.3 (30%), Win Zone is 0 to 108 degrees (30% of 360).
-                // If Win: we need to land between 0 and 108.
-                // If Lose: we need to land between 108 and 360.
-                const winZoneDeg = winChance * 360;
-                
-                let targetDegree;
-                if(win) {
-                    // Random angle inside win zone
-                    targetDegree = Math.random() * winZoneDeg;
-                } else {
-                    // Random angle outside win zone
-                    targetDegree = winZoneDeg + (Math.random() * (360 - winZoneDeg));
-                }
-                
-                return { win, item: wonItem, winChance, roll, targetDegree };
+            getAllItems: () => {
+                return DB.cases.flatMap(c => c.items);
             }
         };
 
-        // --- 4. UI & ROUTER ---
-        const ui = {
-            formatMoney: (n) => '$' + n.toFixed(2),
+        // --- CONTROLLER ---
+        class ServerController {
+            constructor() {
+                this.storageKey = 'flash_cases_tuti_final';
+                this.state = this.loadState();
+            }
+
+            loadState() {
+                const saved = localStorage.getItem(this.storageKey);
+                return saved ? JSON.parse(saved) : { username: null, balance: 50.00, inventory: [], xp: 0 };
+            }
+
+            saveState() { localStorage.setItem(this.storageKey, JSON.stringify(this.state)); this.notifyListeners(); }
             
-            updateAuth: () => {
+            login(username) { this.state.username = username; this.saveState(); }
+            
+            logout() { 
+                this.state.username = null; this.state.balance = 50.00; this.state.inventory = []; 
+                this.saveState(); window.location.reload(); 
+            }
+
+            openCase(caseId) {
+                const c = DB.cases.find(x => x.id === caseId);
+                if (this.state.balance < c.price) return { error: "Insufficient funds" };
+                this.state.balance -= c.price;
+
+                const roll = Math.random();
+                let pool;
+
+                if (caseId === 'case_knife') {
+                    // 1 in 10 chance for the profit item (last in array)
+                    const profitItem = c.items[c.items.length - 1];
+                    const trashItems = c.items.slice(0, c.items.length - 1);
+                    
+                    if (roll < 0.10) { // 10% Win Rate (High for profit, but still 1/10)
+                        pool = [profitItem];
+                    } else {
+                        pool = trashItems;
+                    }
+                } else if (caseId === 'case_high') {
+                    // Brutal Ember Logic
+                    if (roll < 0.70) pool = c.items.filter(i => i.rarity === 'restricted');
+                    else if (roll < 0.90) pool = c.items.filter(i => i.rarity === 'covert');
+                    else pool = c.items.filter(i => i.rarity === 'gold');
+                } else {
+                    // Standard Logic
+                    let tier = 'consumer';
+                    if (roll < 0.005) tier = 'gold';
+                    else if (roll < 0.03) tier = 'classified';
+                    else if (roll < 0.20) tier = 'restricted';
+                    else tier = 'consumer';
+                    pool = c.items.filter(i => i.rarity === tier);
+                    if(!pool.length) pool = c.items;
+                }
+
+                const item = { ...pool[Math.floor(Math.random() * pool.length)], uid: Date.now() + Math.random().toString() };
+                this.state.inventory.push(item);
+                this.saveState();
+                return { success: true, item: item };
+            }
+
+            sellItem(uid) {
+                const idx = this.state.inventory.findIndex(i => i.uid === uid);
+                if (idx > -1) {
+                    this.state.balance += this.state.inventory[idx].price;
+                    this.state.inventory.splice(idx, 1);
+                    this.saveState();
+                }
+            }
+
+            upgrade(sourceUid, targetItemName) {
+                const idx = this.state.inventory.findIndex(i => i.uid === sourceUid);
+                if (idx === -1) return { error: "Item missing" };
+                
+                const sourceItem = this.state.inventory[idx];
+                const allItems = DB.getAllItems();
+                const targetItem = allItems.find(i => i.name === targetItemName);
+                
+                if (!targetItem) return { error: "Target invalid" };
+
+                // Burn item
+                this.state.inventory.splice(idx, 1);
+                
+                // Calc Chance: (Input / Output) * 0.8 House Edge
+                let chance = (sourceItem.price / targetItem.price) * 0.8;
+                if (chance > 0.80) chance = 0.80; // Cap at 80%
+
+                const isWin = Math.random() < chance;
+                if (isWin) {
+                    const newItem = { ...targetItem, uid: Date.now() + Math.random().toString() };
+                    this.state.inventory.push(newItem);
+                    this.saveState();
+                    return { win: true, item: newItem, chance };
+                } else {
+                    this.saveState();
+                    return { win: false, chance };
+                }
+            }
+
+            listeners = [];
+            subscribe(fn) { this.listeners.push(fn); fn(this.state); }
+            notifyListeners() { this.listeners.forEach(fn => fn(this.state)); }
+        }
+
+        const server = new ServerController();
+
+        // --- UI & ROUTER ---
+        const router = {
+            navigate: (page, params) => {
+                const app = document.getElementById('app-root');
+                app.innerHTML = '';
+                if (page === 'home') pages.home(app);
+                else if (page === 'case') pages.case(app, params);
+                else if (page === 'inventory') pages.inventory(app);
+                else if (page === 'upgrader') pages.upgrader(app);
+                lucide.createIcons();
+            }
+        };
+
+        const ui = {
+            closeModal: (id) => document.getElementById(id).classList.add('hidden'),
+            openModal: (id) => document.getElementById(id).classList.remove('hidden'),
+            formatMoney: (n) => '$' + n.toFixed(2),
+            renderNav: (state) => {
                 const el = document.getElementById('auth-section');
-                if(!store.user.username) {
-                    el.innerHTML = `<button onclick="document.getElementById('login-modal').classList.remove('hidden')" class="bg-amber-500 hover:bg-amber-600 text-slate-900 font-black px-6 py-2 rounded-lg uppercase">Login</button>`;
+                if (!state.username) {
+                    el.innerHTML = `<button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black font-bold px-6 py-2 rounded-lg transition">LOGIN</button>`;
                 } else {
                     el.innerHTML = `
-                        <div class="text-right mr-4 hidden sm:block">
-                            <div class="text-white font-bold">${store.user.username}</div>
-                            <div class="text-xs text-slate-400">LVL ${Math.floor(store.user.xp/100)}</div>
-                        </div>
-                        <div class="bg-slate-800 border border-slate-700 px-4 py-2 rounded-lg flex items-center gap-3">
-                            <span class="text-emerald-400 font-mono font-bold text-lg">${ui.formatMoney(store.user.balance)}</span>
-                            <button onclick="engine.addFunds()" class="bg-slate-700 hover:bg-slate-600 text-white p-1 rounded transition"><i data-lucide="plus" class="w-4 h-4"></i></button>
-                        </div>
+                        <div class="mr-4 text-right"><div class="font-bold text-white">${state.username}</div></div>
+                        <div class="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-lg text-amber-500 font-mono font-bold text-lg">${ui.formatMoney(state.balance)}</div>
+                        <button onclick="server.logout()" class="ml-2 text-slate-500 hover:text-white"><i data-lucide="log-out"></i></button>
                     `;
                     lucide.createIcons();
                 }
-            },
-
-            closeModal: (id) => document.getElementById(id).classList.add('hidden'),
-            
-            // LIVE FEED LOGIC
-            spawnFeedItem: () => {
-                const feed = document.getElementById('live-feed');
-                if(!feed) return;
-                
-                const randomItem = WEAPON_DB[Math.floor(Math.random() * WEAPON_DB.length)];
-                const names = ["Ghost", "Viper", "Slayer", "Lucky", "Pro", "Bot", "User"];
-                const name = names[Math.floor(Math.random() * names.length)] + Math.floor(Math.random()*100);
-                
-                const el = document.createElement('div');
-                el.className = "bg-slate-800/50 border border-slate-700 p-2 rounded flex items-center gap-3 fade-in-up";
-                el.innerHTML = `
-                    <div class="w-12 h-12 flex-shrink-0 flex items-center justify-center bg-slate-800 rounded border border-rarity rarity-${randomItem.rarity}" style="--color: ${game.getRarityColor(randomItem.rarity)}">
-                        <img src="${randomItem.img}" class="w-10 h-8 object-contain">
-                    </div>
-                    <div class="overflow-hidden">
-                        <div class="text-xs text-slate-400 truncate">${name}</div>
-                        <div class="text-xs font-bold text-white truncate text-rarity rarity-${randomItem.rarity}" style="--color: ${game.getRarityColor(randomItem.rarity)}">${randomItem.name}</div>
-                    </div>
-                `;
-                feed.prepend(el);
-                if(feed.children.length > 10) feed.lastElementChild.remove();
             }
         };
 
         const auth = {
             login: (e) => {
                 e.preventDefault();
-                engine.login(document.getElementById('login-user').value);
+                server.login(document.getElementById('login-user').value);
                 ui.closeModal('login-modal');
             }
         };
 
-        const router = {
-            current: null,
-            navigate: (page, id) => {
-                router.current = page;
-                const app = document.getElementById('app-root');
-                app.innerHTML = '';
+        // --- PAGES ---
+        const pages = {
+            home: (container) => {
+                if(!server.state.username) {
+                    container.innerHTML = `
+                        <div class="flex flex-col items-center justify-center min-h-[60vh] text-center relative">
+                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-amber-600/10 blur-[100px] rounded-full -z-10"></div>
+                            <h1 class="text-7xl font-black mb-4 text-white">FLASH<span class="text-amber-500">CASES</span></h1>
+                            <p class="text-3xl text-amber-500 mb-8 font-black italic uppercase">"Tuti will not have the 100k"</p>
+                            <p class="text-slate-500 mb-8">Start with $50. No refills. 90% Loss rate on Knife Cases.</p>
+                            <button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black text-xl font-bold px-12 py-5 rounded-xl transition flex items-center gap-3"><i data-lucide="play"></i> START RUN</button>
+                        </div>`;
+                    return;
+                }
+                container.innerHTML = `
+                    <div class="text-center mb-8"><p class="text-2xl text-amber-500 font-black italic uppercase">"Tuti will not have the 100k"</p></div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                        ${DB.cases.map(c => `
+                            <div onclick="router.navigate('case', '${c.id}')" class="case-card rounded-2xl p-6 flex flex-col items-center relative overflow-hidden h-[400px] justify-between ${c.color} border-t-4">
+                                <div class="w-full flex justify-between"><span class="bg-black/50 px-2 py-1 rounded text-xs font-bold text-slate-400">Case</span><span class="text-amber-500 font-mono font-bold">${ui.formatMoney(c.price)}</span></div>
+                                <img src="${c.image}" class="w-56 h-56 object-contain z-10 drop-shadow-2xl hover:scale-110 transition duration-500">
+                                <div class="text-center z-10">
+                                    <h3 class="text-2xl font-black italic text-white mb-2 uppercase">${c.name}</h3>
+                                    <button class="bg-zinc-800 hover:bg-amber-600 hover:text-black text-white w-full py-3 rounded-lg font-bold transition border border-zinc-700">OPEN</button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            case: (container, caseId) => {
+                const c = DB.cases.find(x => x.id === caseId);
+                game.fastMode = false;
+                game.openCount = 1;
+
+                container.innerHTML = `
+                    <div class="text-center mb-6 relative">
+                        <button onclick="router.navigate('home')" class="absolute left-0 top-2 text-slate-500 hover:text-white flex items-center gap-2"><i data-lucide="arrow-left"></i> Back</button>
+                        <h1 class="text-5xl font-black italic text-white mb-2">${c.name}</h1>
+                        <p class="text-amber-500 font-mono text-2xl font-bold">${ui.formatMoney(c.price)}</p>
+                    </div>
+
+                    <div class="spinner-container mb-6 relative">
+                        <div class="spinner-overlay-left"></div><div class="spinner-overlay-right"></div><div class="center-line"></div>
+                        <div class="items-strip" id="spinner-strip"></div>
+                        <div id="fast-overlay" class="absolute inset-0 bg-black z-20 flex items-center justify-center hidden"><span class="text-amber-500 font-bold animate-pulse">OPENING FAST...</span></div>
+                    </div>
+
+                    <div class="flex flex-col items-center gap-6">
+                        <div class="flex items-center gap-4 bg-zinc-900 p-2 rounded-xl border border-zinc-800">
+                            <button onclick="game.setCount(1)" class="count-btn bg-amber-600 text-black px-4 py-2 rounded-lg font-bold transition" id="btn-c-1">1x</button>
+                            <button onclick="game.setCount(2)" class="count-btn bg-zinc-800 text-slate-400 px-4 py-2 rounded-lg font-bold transition hover:text-white" id="btn-c-2">2x</button>
+                            <button onclick="game.setCount(3)" class="count-btn bg-zinc-800 text-slate-400 px-4 py-2 rounded-lg font-bold transition hover:text-white" id="btn-c-3">3x</button>
+                            <div class="w-px h-8 bg-zinc-700 mx-2"></div>
+                            <div class="flex items-center gap-2 px-2">
+                                <span class="text-xs font-bold text-slate-400 uppercase">Fast</span>
+                                <label class="relative inline-block w-10 h-6">
+                                    <input type="checkbox" onchange="game.fastMode = this.checked" class="toggle-checkbox opacity-0 w-0 h-0">
+                                    <span class="toggle-label absolute cursor-pointer inset-0 bg-zinc-700 rounded-full transition-all duration-300 before:content-[''] before:absolute before:left-1 before:bottom-1 before:bg-white before:w-4 before:h-4 before:rounded-full before:transition-all before:duration-300"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <button id="btn-spin" onclick="game.startOpening('${c.id}')" class="bg-amber-600 hover:bg-amber-500 text-black text-2xl font-black italic px-24 py-5 rounded-lg transition-all transform active:scale-95 disabled:opacity-50">
+                            OPEN CASE
+                        </button>
+                        <p id="spin-error" class="text-red-500 h-6 font-bold uppercase text-xs"></p>
+                    </div>
+
+                    <div class="mt-12 border-t border-zinc-900 pt-6">
+                        <div class="flex flex-wrap justify-center gap-2">
+                            ${c.items.sort((a,b) => a.price - b.price).map(i => `
+                                <div class="bg-zinc-900/50 p-2 rounded border border-zinc-800 w-28 flex flex-col items-center rarity-${i.rarity} relative">
+                                    <div class="w-full h-16 flex items-center justify-center mb-1">${DB.renderItem(i, "w-20 h-14")}</div>
+                                    <div class="h-0.5 w-full mb-1 opacity-50" style="background: var(--glow)"></div>
+                                    <span class="text-[9px] text-slate-400 font-bold truncate w-full text-center">${i.name}</span>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                game.generateStrip(c);
+            },
+
+            inventory: (container) => {
+                if(!server.state.inventory.length) {
+                    container.innerHTML = `<div class="flex flex-col items-center justify-center h-96 text-slate-600"><p>Inventory empty.</p></div>`; return;
+                }
+                const total = server.state.inventory.reduce((a,b)=>a+b.price,0);
+                container.innerHTML = `
+                    <div class="flex justify-between items-center mb-6 pb-4 border-b border-zinc-800">
+                        <h2 class="text-3xl font-black text-white">INVENTORY <span class="text-sm text-slate-500 ml-2">(${server.state.inventory.length})</span></h2>
+                        <span class="text-emerald-400 font-mono text-xl font-bold">${ui.formatMoney(total)}</span>
+                    </div>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                        ${server.state.inventory.slice().reverse().map(i => `
+                            <div class="bg-zinc-900 rounded-lg border border-zinc-800 p-3 rarity-${i.rarity} relative group">
+                                <div class="h-24 flex items-center justify-center mb-2">${DB.renderItem(i, "w-24 h-16")}</div>
+                                <div class="text-xs font-bold text-white truncate mb-1" style="color:var(--glow)">${i.name}</div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-xs text-slate-500 font-mono">${ui.formatMoney(i.price)}</span>
+                                    <button onclick="server.sellItem('${i.uid}'); router.navigate('inventory')" class="text-zinc-600 hover:text-red-500"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            upgrader: (container) => {
+                if (!server.state.username) { router.navigate('home'); return; }
+                container.innerHTML = `
+                    <div class="text-center mb-8">
+                        <h1 class="text-5xl font-black italic text-white mb-2">UPGRADER</h1>
+                        <p class="text-slate-500 text-xs uppercase tracking-widest">Select Inventory Item &rarr; Select Target Skin</p>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row items-center justify-center gap-12 relative">
+                        
+                        <div class="w-64 h-80 bg-zinc-900 border-2 border-dashed border-zinc-700 hover:border-amber-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group" id="upg-source" onclick="upgrader.openSourceSelector()">
+                            <i data-lucide="plus" class="text-zinc-600 w-12 h-12 mb-4 group-hover:text-amber-500"></i>
+                            <span class="text-slate-500 font-bold uppercase text-xs">Select Source</span>
+                        </div>
+
+                        <div class="flex flex-col items-center gap-4 z-10">
+                            <div class="wheel-container">
+                                <div class="wheel-spinner" id="wheel-spinner" style="--angle: 0deg"></div>
+                                <div class="wheel-inner">
+                                    <div class="wheel-arrow"></div> <span class="text-5xl font-black text-white tracking-tighter" id="win-chance">0%</span>
+                                </div>
+                            </div>
+                            <button id="btn-upgrade" onclick="upgrader.roll()" class="w-48 bg-zinc-800 text-slate-600 font-black px-6 py-4 rounded-xl uppercase tracking-widest transition border border-zinc-800" disabled>ROLL</button>
+                        </div>
+
+                        <div class="w-64 h-80 bg-zinc-900 border-2 border-dashed border-zinc-700 hover:border-amber-500 rounded-xl flex flex-col items-center justify-center cursor-pointer transition group opacity-50 pointer-events-none" id="upg-target" onclick="upgrader.openTargetSelector()">
+                            <i data-lucide="crosshair" class="text-zinc-600 w-12 h-12 mb-4 group-hover:text-amber-500"></i>
+                            <span class="text-slate-500 font-bold uppercase text-xs">Select Target</span>
+                        </div>
+                    </div>
+                `;
+
+                // CREATE MODALS
+                const modalHTML = (id, title) => `
+                    <div id="${id}" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
+                        <div class="bg-zinc-900 w-full max-w-4xl h-[80vh] rounded-2xl border border-zinc-700 flex flex-col shadow-2xl">
+                            <div class="p-6 border-b border-zinc-800 flex justify-between items-center bg-black/20 rounded-t-2xl">
+                                <h3 class="font-bold text-xl text-white uppercase">${title}</h3>
+                                <button onclick="document.getElementById('${id}').classList.add('hidden')" class="text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+                            </div>
+                            <div class="overflow-y-auto p-6 grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4" id="${id}-grid"></div>
+                        </div>
+                    </div>`;
                 
-                if(page === 'home') pages.home(app);
-                else if(page === 'case') pages.case(app, id);
-                else if(page === 'inventory') pages.inventory(app);
-                else if(page === 'upgrader') pages.upgrader(app);
-                
-                ui.updateAuth();
+                const d = document.createElement('div');
+                d.innerHTML = modalHTML('modal-source', 'Select Your Item') + modalHTML('modal-target', 'Select Target Skin');
+                document.body.appendChild(d);
                 lucide.createIcons();
             }
         };
 
-        const pages = {
-            home: (root) => {
-                if(!store.user.username) {
-                    root.innerHTML = `
-                        <div class="flex flex-col items-center justify-center h-[60vh] text-center">
-                            <h1 class="text-8xl font-black text-white mb-4 brand-font tracking-tighter">FLASH<span class="text-amber-500">CASES</span></h1>
-                            <p class="text-2xl text-slate-400 mb-8">High Stakes. Real Odds. No Risk.</p>
-                            <button onclick="document.getElementById('login-modal').classList.remove('hidden')" class="bg-amber-500 text-slate-900 px-12 py-4 rounded-xl text-xl font-black hover:scale-105 transition">START OPENING</button>
-                        </div>
-                    `;
-                    return;
-                }
-                root.innerHTML = `
-                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                        ${DB.cases.map(c => `
-                            <div onclick="router.navigate('case', '${c.id}')" class="case-card border-2 ${c.color} rounded-2xl p-6 relative overflow-hidden group cursor-pointer h-80 flex flex-col items-center justify-center">
-                                <img src="${c.image}" class="w-40 h-40 object-contain mb-4 drop-shadow-2xl group-hover:scale-110 transition duration-500">
-                                <h3 class="text-2xl font-black text-white z-10 relative">${c.name}</h3>
-                                <div class="mt-2 bg-slate-900/80 px-4 py-1 rounded-full text-emerald-400 font-mono font-bold">${ui.formatMoney(c.price)}</div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            },
-            
-            case: (root, id) => {
-                const c = DB.cases.find(x => x.id === id);
-                root.innerHTML = `
-                    <div class="flex items-center gap-4 mb-8">
-                        <button onclick="router.navigate('home')" class="bg-slate-800 p-2 rounded hover:text-white text-slate-400"><i data-lucide="arrow-left"></i></button>
-                        <div>
-                            <h1 class="text-3xl font-black text-white">${c.name}</h1>
-                            <div class="text-emerald-400 font-mono font-bold">${ui.formatMoney(c.price)}</div>
-                        </div>
-                    </div>
-                    
-                    <div class="spinner-container mb-8">
-                        <div class="spinner-overlay-left"></div>
-                        <div class="spinner-overlay-right"></div>
-                        <div class="center-arrow">
-                            <div class="arrow-head"></div>
-                            <div class="arrow-line"></div>
-                            <div class="arrow-tail"></div>
-                        </div>
-                        <div class="items-strip" id="spinner-strip"></div>
-                    </div>
-
-                    <div class="flex justify-center">
-                        <button id="spin-btn" onclick="game.spin('${id}')" class="bg-amber-500 hover:bg-amber-400 text-slate-900 px-16 py-4 rounded-xl text-xl font-black shadow-lg shadow-amber-500/20 transition disabled:opacity-50">OPEN CASE</button>
-                    </div>
-                `;
-                game.initStrip(c);
-            },
-
-            inventory: (root) => {
-                root.innerHTML = `
-                    <div class="flex justify-between items-center mb-8">
-                        <h1 class="text-3xl font-black text-white">INVENTORY <span class="text-slate-500 text-xl">(${store.user.inventory.length})</span></h1>
-                        <div class="text-emerald-400 font-mono font-bold text-xl">Total: ${ui.formatMoney(store.user.inventory.reduce((a,b)=>a+b.price,0))}</div>
-                    </div>
-                    <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
-                        ${store.user.inventory.slice().reverse().map(i => `
-                            <div class="bg-slate-800 border-b-4 border-rarity rarity-${i.rarity} p-4 rounded flex flex-col items-center relative group" style="--color: ${game.getRarityColor(i.rarity)}">
-                                <div class="mb-2">${DB.renderItem(i)}</div>
-                                <div class="text-xs font-bold text-center truncate w-full text-slate-300">${i.name}</div>
-                                <div class="text-xs font-mono text-emerald-400 mt-1">${ui.formatMoney(i.price)}</div>
-                                <button onclick="game.sell('${i.uid}')" class="absolute top-2 right-2 text-slate-600 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            },
-
-            upgrader: (root) => {
-                root.innerHTML = `
-                    <div class="flex flex-col items-center">
-                        <h1 class="text-4xl font-black text-white mb-8">UPGRADER</h1>
-                        
-                        <div class="flex flex-col lg:flex-row items-center gap-16">
-                            <!-- Input Slot -->
-                            <div onclick="upgrader.openSelector()" id="upgrade-input" class="w-48 h-48 bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-2xl flex flex-col items-center justify-center cursor-pointer hover:border-amber-500 hover:bg-slate-800 transition group">
-                                <i data-lucide="plus" class="w-8 h-8 text-slate-500 group-hover:text-amber-500 mb-2"></i>
-                                <span class="text-xs font-bold text-slate-500 uppercase">Select Item</span>
-                            </div>
-
-                            <!-- Wheel -->
-                            <div class="flex flex-col items-center gap-4">
-                                <div class="upgrade-wheel-container">
-                                    <!-- The Marker Arrow -->
-                                    <div class="upgrade-marker">
-                                        <div class="w-0 h-0 border-l-[10px] border-l-transparent border-r-[10px] border-r-transparent border-t-[15px] border-t-white"></div>
-                                    </div>
-                                    
-                                    <!-- The Rotating Wheel -->
-                                    <div id="wheel" class="upgrade-wheel" style="--angle: 0deg">
-                                        <div class="upgrade-inner-bg">
-                                            <span id="win-chance-text" class="text-4xl font-black text-white">0%</span>
-                                            <span class="text-xs text-slate-500 font-bold uppercase">Win Chance</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <!-- Controls -->
-                                <div class="w-64 bg-slate-800 p-4 rounded-xl border border-slate-700 opacity-50 pointer-events-none transition" id="upgrade-controls">
-                                    <div class="flex justify-between text-xs font-bold text-slate-400 mb-2">
-                                        <span>MULTIPLIER</span>
-                                        <span id="mult-val" class="text-amber-400">x2.0</span>
-                                    </div>
-                                    <input type="range" min="1.5" max="10" step="0.1" value="2" class="w-full accent-amber-500" oninput="upgrader.setMult(this.value)">
-                                </div>
-                                
-                                <button id="btn-upgrade" onclick="upgrader.roll()" class="bg-slate-700 text-slate-500 px-8 py-3 rounded-xl font-black w-full transition" disabled>UPGRADE</button>
-                            </div>
-
-                            <!-- Output Slot -->
-                            <div id="upgrade-output" class="w-48 h-48 bg-slate-800/30 border border-slate-700 rounded-2xl flex flex-col items-center justify-center opacity-50">
-                                <span class="text-xs font-bold text-slate-600 uppercase mb-2">Target</span>
-                                <span id="target-price" class="text-2xl font-mono font-bold text-emerald-500/50">$0.00</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Item Selector Modal -->
-                    <div id="selector-modal" class="fixed inset-0 z-50 hidden bg-black/90 flex items-center justify-center p-4">
-                        <div class="bg-slate-800 w-full max-w-4xl h-[80vh] rounded-2xl border border-slate-600 flex flex-col">
-                            <div class="p-4 border-b border-slate-700 flex justify-between">
-                                <h3 class="font-bold text-white">Select Item</h3>
-                                <button onclick="document.getElementById('selector-modal').classList.add('hidden')"><i data-lucide="x"></i></button>
-                            </div>
-                            <div id="selector-grid" class="p-4 grid grid-cols-3 sm:grid-cols-5 gap-3 overflow-y-auto"></div>
-                        </div>
-                    </div>
-                `;
-            }
-        };
-
+        // --- GAME LOGIC ---
         const game = {
-            getRarityColor: (r) => {
-                if(r==='mil-spec') return '#3b82f6';
-                if(r==='restricted') return '#8b5cf6';
-                if(r==='classified') return '#d946ef';
-                if(r==='covert') return '#ef4444';
-                if(r==='gold') return '#eab308';
-                return '#b0c3d9';
+            currentDrops: [],
+            openCount: 1,
+            fastMode: false,
+
+            setCount: (n) => {
+                game.openCount = n;
+                [1,2,3].forEach(i => {
+                    const btn = document.getElementById(`btn-c-${i}`);
+                    if(i === n) btn.className = "count-btn bg-amber-600 text-black px-4 py-2 rounded-lg font-bold transition";
+                    else btn.className = "count-btn bg-zinc-800 text-slate-400 px-4 py-2 rounded-lg font-bold transition hover:text-white";
+                });
             },
-            
-            initStrip: (c) => {
+
+            generateStrip: (caseObj) => {
                 const strip = document.getElementById('spinner-strip');
+                if(!strip) return;
                 let html = '';
-                for(let i=0; i<100; i++) {
-                    const item = c.items[Math.floor(Math.random()*c.items.length)];
+                for(let i=0; i<80; i++) {
+                    const item = caseObj.items[Math.floor(Math.random() * caseObj.items.length)];
                     html += `
-                        <div class="w-[140px] h-[160px] flex-shrink-0 mx-1 bg-slate-800 border-b-4 border-rarity rarity-${item.rarity} flex flex-col items-center justify-center rounded relative" style="--color: ${game.getRarityColor(item.rarity)}">
-                            <div class="absolute inset-0 bg-rarity-glow rarity-${item.rarity}" style="--color: ${game.getRarityColor(item.rarity)}"></div>
-                            ${DB.renderItem(item)}
-                            <div class="text-[10px] font-bold text-slate-400 mt-2 truncate px-2 w-full text-center relative z-10">${item.name}</div>
-                        </div>
-                    `;
+                        <div class="w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#0f0f0f] border-b-2 rarity-${item.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden">
+                            <div class="relative z-10 scale-90">${DB.renderItem(item)}</div>
+                        </div>`;
                 }
                 strip.innerHTML = html;
             },
 
-            spin: (id) => {
-                const btn = document.getElementById('spin-btn');
+            startOpening: (caseId) => {
+                const btn = document.getElementById('btn-spin');
+                const err = document.getElementById('spin-error');
                 const strip = document.getElementById('spinner-strip');
-                const c = DB.cases.find(x => x.id === id);
-                
-                const res = engine.openCase(id);
-                if(res.error) { alert(res.error); return; }
-                
-                btn.disabled = true;
-                
-                // Visuals
-                const cardWidth = 148; 
-                const landIndex = 75;
-                const offset = (landIndex * cardWidth) - (strip.parentElement.offsetWidth / 2) + (140/2);
-                const jitter = Math.random() * 100 - 50;
-                
-                // Plant Winner
-                const winnerEl = strip.children[landIndex];
-                winnerEl.innerHTML = `
-                    <div class="absolute inset-0 bg-rarity-glow rarity-${res.item.rarity}" style="opacity:0.5; --color: ${game.getRarityColor(res.item.rarity)}"></div>
-                    ${DB.renderItem(res.item)}
-                    <div class="text-xs font-black text-white mt-2 truncate px-2 w-full text-center relative z-10 text-rarity rarity-${res.item.rarity}" style="--color: ${game.getRarityColor(res.item.rarity)}">${res.item.name}</div>
-                `;
+                const c = DB.cases.find(x => x.id === caseId);
 
-                strip.style.transition = 'transform 6s cubic-bezier(0.15, 0, 0.10, 1)';
-                strip.style.transform = `translateX(-${offset + jitter}px)`;
-                
-                setTimeout(() => {
-                    // Show Modal
-                    document.getElementById('drop-image').innerHTML = DB.renderItem(res.item, "w-64 h-64");
-                    document.getElementById('drop-info').querySelector('h3').innerText = res.item.name;
-                    document.getElementById('drop-info').querySelector('p').innerText = ui.formatMoney(res.item.price);
-                    
-                    const modal = document.getElementById('drop-modal');
-                    modal.classList.remove('hidden');
-                    setTimeout(() => document.getElementById('drop-content').classList.remove('scale-90', 'opacity-0'), 50);
+                if(server.state.balance < (c.price * game.openCount)) {
+                    err.innerText = "INSUFFICIENT FUNDS"; return;
+                }
 
-                    // Reset
+                btn.disabled = true; err.innerText = "";
+                game.currentDrops = [];
+
+                // Perform Opens
+                for(let i=0; i<game.openCount; i++) {
+                    const res = server.openCase(caseId);
+                    if(res.success) game.currentDrops.push(res.item);
+                }
+
+                // If Fast Mode OR Multiple Cases -> Instant
+                if(game.fastMode || game.openCount > 1) {
+                    document.getElementById('fast-overlay').classList.remove('hidden');
                     setTimeout(() => {
+                        game.showResults();
+                        document.getElementById('fast-overlay').classList.add('hidden');
+                        btn.disabled = false;
+                    }, 400); // Tiny delay for UX
+                } else {
+                    // Classic 1x Animation
+                    const result = game.currentDrops[0];
+                    const cardWidth = 158; 
+                    const landIndex = 60; 
+                    const offset = (landIndex * cardWidth) - (strip.parentElement.offsetWidth / 2) + (150/2);
+                    const jitter = Math.floor(Math.random() * 50) - 25;
+
+                    // Plant Winner
+                    const visItem = strip.children[landIndex];
+                    visItem.innerHTML = `<div class="relative z-10 scale-110 drop-shadow-2xl">${DB.renderItem(result)}</div>`;
+                    visItem.className = `w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#151515] border-b-4 rarity-${result.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] z-20 transform scale-105`;
+
+                    strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
+                    strip.style.transform = `translateX(-${offset + jitter}px)`;
+
+                    setTimeout(() => {
+                        game.showResults();
                         strip.style.transition = 'none';
                         strip.style.transform = 'translateX(0)';
-                        game.initStrip(c);
+                        game.generateStrip(c);
                         btn.disabled = false;
-                    }, 1000);
-                }, 6200);
-            },
-
-            sell: (uid) => {
-                const idx = store.user.inventory.findIndex(i => i.uid == uid);
-                if(idx > -1) {
-                    store.user.balance += store.user.inventory[idx].price;
-                    store.user.inventory.splice(idx, 1);
-                    store.save();
-                    router.navigate('inventory');
+                    }, 4500);
                 }
             },
-            
-            sellCurrentDrop: () => {
-                // Logic assumes last item is drop
-                const item = store.user.inventory[store.user.inventory.length-1];
-                game.sell(item.uid);
+
+            showResults: () => {
+                const grid = document.getElementById('drop-grid');
+                grid.innerHTML = '';
+                game.currentDrops.forEach(item => {
+                    grid.innerHTML += `
+                        <div class="bg-zinc-800 p-4 rounded-xl border border-zinc-700 flex flex-col items-center w-48 rarity-${item.rarity} relative">
+                            <div class="w-full h-24 flex items-center justify-center mb-2">${DB.renderItem(item, "w-32 h-20")}</div>
+                            <div class="text-sm font-bold text-white mb-1" style="color:var(--glow)">${item.name}</div>
+                            <div class="text-xs font-mono text-amber-500 bg-black/50 px-2 py-1 rounded">${ui.formatMoney(item.price)}</div>
+                        </div>
+                    `;
+                });
+                ui.openModal('drop-modal');
+                const content = document.getElementById('drop-content');
+                content.classList.remove('scale-90', 'opacity-0');
+                content.classList.add('scale-100', 'opacity-100');
+            },
+
+            sellAllDrops: () => {
+                game.currentDrops.forEach(i => server.sellItem(i.uid));
                 ui.closeModal('drop-modal');
+                if(router.current === 'inventory') router.navigate('inventory');
             }
         };
 
         const upgrader = {
-            selected: null,
-            mult: 2,
-            
-            openSelector: () => {
-                if(store.user.inventory.length === 0) return alert("Empty Inventory");
-                
-                const grid = document.getElementById('selector-grid');
-                grid.innerHTML = store.user.inventory.map(i => `
-                    <div onclick="upgrader.select('${i.uid}')" class="bg-slate-900 p-2 rounded border border-slate-700 cursor-pointer hover:border-amber-500 flex flex-col items-center">
-                        ${DB.renderItem(i, "w-16 h-12")}
-                        <div class="text-[10px] font-bold text-slate-300 truncate w-full text-center">${i.name}</div>
-                        <div class="text-xs font-mono text-emerald-400">${ui.formatMoney(i.price)}</div>
-                    </div>
-                `).join('');
-                document.getElementById('selector-modal').classList.remove('hidden');
+            source: null,
+            target: null,
+
+            openSourceSelector: () => {
+                const grid = document.getElementById('modal-source-grid');
+                grid.innerHTML = '';
+                if(!server.state.inventory.length) grid.innerHTML = '<p class="text-slate-500 col-span-full text-center">Empty Inventory</p>';
+                server.state.inventory.forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = `bg-zinc-800 p-2 rounded border border-zinc-700 cursor-pointer hover:border-amber-500 flex flex-col items-center`;
+                    el.innerHTML = `${DB.renderItem(item, "w-20 h-14")}<span class="text-[10px] text-slate-300 truncate w-full text-center mt-1">${item.name}</span><span class="text-[10px] text-amber-500">${ui.formatMoney(item.price)}</span>`;
+                    el.onclick = () => {
+                        upgrader.source = item;
+                        document.getElementById('modal-source').classList.add('hidden');
+                        upgrader.updateUI();
+                    };
+                    grid.appendChild(el);
+                });
+                document.getElementById('modal-source').classList.remove('hidden');
             },
 
-            select: (uid) => {
-                upgrader.selected = store.user.inventory.find(i => i.uid == uid);
-                document.getElementById('selector-modal').classList.add('hidden');
-                
-                document.getElementById('upgrade-input').innerHTML = `
-                    ${DB.renderItem(upgrader.selected, "w-32 h-24")}
-                    <div class="font-bold text-white text-center text-sm mt-2">${upgrader.selected.name}</div>
-                    <div class="text-emerald-400 font-mono font-bold">${ui.formatMoney(upgrader.selected.price)}</div>
-                `;
-                document.getElementById('upgrade-input').classList.replace('border-dashed', 'border-solid');
-                document.getElementById('upgrade-input').classList.add('border-amber-500');
-                
-                document.getElementById('upgrade-controls').classList.remove('opacity-50', 'pointer-events-none');
-                document.getElementById('upgrade-output').classList.remove('opacity-50');
-                document.getElementById('btn-upgrade').disabled = false;
-                document.getElementById('btn-upgrade').classList.replace('bg-slate-700', 'bg-amber-500');
-                document.getElementById('btn-upgrade').classList.replace('text-slate-500', 'text-slate-900');
-                
-                upgrader.setMult(upgrader.mult);
+            openTargetSelector: () => {
+                const grid = document.getElementById('modal-target-grid');
+                grid.innerHTML = '';
+                // Get all items, filter out cheap ones relative to source if desired, or show all
+                DB.getAllItems().sort((a,b) => b.price - a.price).forEach(item => {
+                    const el = document.createElement('div');
+                    el.className = `bg-zinc-800 p-2 rounded border border-zinc-700 cursor-pointer hover:border-amber-500 flex flex-col items-center`;
+                    el.innerHTML = `${DB.renderItem(item, "w-20 h-14")}<span class="text-[10px] text-slate-300 truncate w-full text-center mt-1">${item.name}</span><span class="text-[10px] text-amber-500">${ui.formatMoney(item.price)}</span>`;
+                    el.onclick = () => {
+                        upgrader.target = item;
+                        document.getElementById('modal-target').classList.add('hidden');
+                        upgrader.updateUI();
+                    };
+                    grid.appendChild(el);
+                });
+                document.getElementById('modal-target').classList.remove('hidden');
             },
 
-            setMult: (val) => {
-                upgrader.mult = parseFloat(val);
-                if(!upgrader.selected) return;
-                
-                document.getElementById('mult-val').innerText = `x${upgrader.mult.toFixed(1)}`;
-                document.getElementById('target-price').innerText = ui.formatMoney(upgrader.selected.price * upgrader.mult);
-                
-                // Update Wheel visual
-                // winChance = (1/mult)*0.9. E.g., mult 2 = 45% chance.
-                // Visual angle = 45% of 360 = 162 deg.
-                const winChance = (1 / upgrader.mult) * 0.9;
-                const angle = winChance * 360;
-                
-                document.getElementById('wheel').style.setProperty('--angle', `${angle}deg`);
-                document.getElementById('win-chance-text').innerText = `${(winChance*100).toFixed(0)}%`;
+            updateUI: () => {
+                if(upgrader.source) {
+                    const s = document.getElementById('upg-source');
+                    s.innerHTML = `${DB.renderItem(upgrader.source, "w-32 h-20")}<div class="text-sm font-bold text-white mt-2">${upgrader.source.name}</div><div class="text-xs text-amber-500 font-mono">${ui.formatMoney(upgrader.source.price)}</div>`;
+                    s.className = "w-64 h-80 bg-zinc-800 border-2 border-amber-500 rounded-xl flex flex-col items-center justify-center cursor-pointer";
+                    document.getElementById('upg-target').classList.remove('opacity-50', 'pointer-events-none');
+                }
+
+                if(upgrader.target) {
+                    const t = document.getElementById('upg-target');
+                    t.innerHTML = `${DB.renderItem(upgrader.target, "w-32 h-20")}<div class="text-sm font-bold text-white mt-2">${upgrader.target.name}</div><div class="text-xs text-amber-500 font-mono">${ui.formatMoney(upgrader.target.price)}</div>`;
+                    t.className = "w-64 h-80 bg-zinc-800 border-2 border-amber-500 rounded-xl flex flex-col items-center justify-center cursor-pointer";
+                }
+
+                if(upgrader.source && upgrader.target) {
+                    let chance = (upgrader.source.price / upgrader.target.price) * 0.8 * 100;
+                    if(chance > 80) chance = 80;
+                    if(chance < 1) chance = 1; // Minimum 1% visual
+                    
+                    document.getElementById('win-chance').innerText = chance.toFixed(1) + '%';
+                    document.getElementById('wheel-spinner').style.setProperty('--angle', `${chance * 3.6}deg`);
+                    
+                    const btn = document.getElementById('btn-upgrade');
+                    btn.disabled = false;
+                    btn.classList.remove('bg-zinc-800', 'text-slate-600');
+                    btn.classList.add('bg-amber-600', 'text-black');
+                }
             },
 
             roll: () => {
                 const btn = document.getElementById('btn-upgrade');
-                const wheel = document.getElementById('wheel');
                 btn.disabled = true;
-
-                const res = engine.upgrade(upgrader.selected.uid, upgrader.mult);
+                const spinner = document.getElementById('wheel-spinner');
                 
-                // Animate Wheel
-                // We need to land on `targetDegree`.
-                // The marker is at 0 (top). The wheel spins clockwise. 
-                // A segment at degree D on the wheel is initially at D degrees clockwise from top.
-                // To bring degree D to the top, we must rotate the wheel Counter-Clockwise by D degrees.
-                // CSS rotation is clockwise. So we rotate by -D.
-                // To spin multiple times, we subtract (360 * 5).
-                // Final CSS Rotation = - (360 * 5 + targetDegree).
-                
-                const spins = 5;
-                const finalRotation = -((360 * spins) + res.targetDegree);
-                
-                wheel.style.transition = 'transform 4s cubic-bezier(0.2, 0.8, 0.2, 1)'; // Custom easing for wheel spin effect
-                wheel.style.transform = `rotate(${finalRotation}deg)`;
+                // Spin logic: Rotate the CONTAINER of the conic gradient, not the gradient stops
+                // But CSS conic-gradient isn't easily rotatable. We rotate the DIV.
+                // Reset rotation
+                spinner.style.transition = 'none';
+                spinner.style.transform = 'rotate(0deg)';
                 
                 setTimeout(() => {
-                    if(res.win) {
-                        // WIN UI
-                        document.getElementById('drop-image').innerHTML = DB.renderItem(res.item, "w-64 h-64");
-                        document.getElementById('drop-info').querySelector('h3').innerText = "UPGRADE SUCCESS";
-                        document.getElementById('drop-info').querySelector('p').innerText = ui.formatMoney(res.item.price);
-                        const modal = document.getElementById('drop-modal');
-                        modal.classList.remove('hidden');
-                        setTimeout(() => document.getElementById('drop-content').classList.remove('scale-90', 'opacity-0'), 50);
-                    } else {
-                        // LOSE UI - Simple shake red flash
-                        wheel.style.border = "4px solid #ef4444";
-                        setTimeout(() => {
-                            alert("Upgrade Failed. Item Lost.");
-                            router.navigate('upgrader'); // reset
-                        }, 500);
-                    }
+                    spinner.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
+                    // Random end rotation + multiple spins
+                    // The Winning Zone is from 0deg to Xdeg.
+                    // The arrow is at Top (0deg visually, but in CSS usually 0 is top).
+                    // We need to rotate so the Winning Zone lands under the arrow.
+                    const rand = Math.floor(Math.random() * 360);
+                    spinner.style.transform = `rotate(${3600 + rand}deg)`;
                     
-                    // Reset Button state handled by router refresh or manual reset
-                    if(res.win) {
-                         // Wait for modal close to reset
-                    }
-                }, 4100);
+                    setTimeout(() => {
+                        const res = server.upgrade(upgrader.source.uid, upgrader.target.name);
+                        if(res.win) {
+                            alert("UPGRADE SUCCESS!");
+                        } else {
+                            alert("UPGRADE FAILED.");
+                        }
+                        // Reset
+                        upgrader.source = null; upgrader.target = null;
+                        router.navigate('upgrader');
+                    }, 4100);
+                }, 50);
             }
         };
 
-        // Init
-        if(localStorage.getItem('flash_user')) {
-             router.navigate('home');
-        } else {
-             ui.updateAuth();
-             router.navigate('home');
-        }
-
-        // Start Live Feed simulation
-        setInterval(ui.spawnFeedItem, 2000);
-        ui.spawnFeedItem();
-
+        server.subscribe(ui.renderNav);
+        router.navigate('home');
+        lucide.createIcons();
     </script>
 </body>
 </html>
