@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flash Cases - Tuti Edition</title>
+    <title>Flash Cases - Tuti No Profit Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -82,7 +82,6 @@
             overflow: hidden;
         }
 
-        /* The spinning part */
         .wheel-spinner {
             position: absolute;
             inset: 0;
@@ -91,7 +90,6 @@
             transition: transform 5s cubic-bezier(0.1, 0, 0.05, 1);
         }
 
-        /* The inner cutout to make it a ring */
         .wheel-inner {
             position: absolute;
             width: 260px;
@@ -105,7 +103,6 @@
             flex-direction: column;
         }
 
-        /* The Fixed Arrow */
         .wheel-arrow {
             position: absolute;
             top: -10px;
@@ -268,7 +265,7 @@
         // --- CONTROLLER ---
         class ServerController {
             constructor() {
-                this.storageKey = 'flash_cases_tuti_final';
+                this.storageKey = 'flash_cases_tuti_final_v2';
                 this.state = this.loadState();
             }
 
@@ -295,19 +292,17 @@
                 let pool;
 
                 if (caseId === 'case_knife') {
-                    // 1 in 10 chance for the profit item (last in array)
+                    // 5% Win Rate (Safe Nerf)
                     const profitItem = c.items[c.items.length - 1];
                     const trashItems = c.items.slice(0, c.items.length - 1);
-                    
-                    if (roll < 0.10) { // 10% Win Rate (High for profit, but still 1/10)
-                        pool = [profitItem];
-                    } else {
-                        pool = trashItems;
-                    }
+                    if (roll < 0.05) { pool = [profitItem]; } else { pool = trashItems; }
                 } else if (caseId === 'case_high') {
-                    // Brutal Ember Logic
-                    if (roll < 0.70) pool = c.items.filter(i => i.rarity === 'restricted');
-                    else if (roll < 0.90) pool = c.items.filter(i => i.rarity === 'covert');
+                    // 💀 BRUTAL EMBER ODDS 💀
+                    // 99% Chance for Glock Fade (Loss)
+                    // 0.9% Chance for Covert
+                    // 0.1% Chance for Gold
+                    if (roll < 0.99) pool = c.items.filter(i => i.rarity === 'restricted');
+                    else if (roll < 0.999) pool = c.items.filter(i => i.rarity === 'covert');
                     else pool = c.items.filter(i => i.rarity === 'gold');
                 } else {
                     // Standard Logic
@@ -434,6 +429,7 @@
                                 <img src="${c.image}" class="w-56 h-56 object-contain z-10 drop-shadow-2xl hover:scale-110 transition duration-500">
                                 <div class="text-center z-10">
                                     <h3 class="text-2xl font-black italic text-white mb-2 uppercase">${c.name}</h3>
+                                    ${c.id === 'case_high' ? '<span class="text-[10px] bg-red-900 text-red-200 px-2 py-0.5 rounded mb-1 inline-block">SCAM ODDS: 99% LOSS</span>' : ''}
                                     <button class="bg-zinc-800 hover:bg-amber-600 hover:text-black text-white w-full py-3 rounded-lg font-bold transition border border-zinc-700">OPEN</button>
                                 </div>
                             </div>
@@ -592,6 +588,7 @@
                 if(!strip) return;
                 let html = '';
                 for(let i=0; i<80; i++) {
+                    // VISUAL ONLY: Still show high tier items occasionally to bait user
                     const item = caseObj.items[Math.floor(Math.random() * caseObj.items.length)];
                     html += `
                         <div class="w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#0f0f0f] border-b-2 rarity-${item.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden">
@@ -753,18 +750,11 @@
                 btn.disabled = true;
                 const spinner = document.getElementById('wheel-spinner');
                 
-                // Spin logic: Rotate the CONTAINER of the conic gradient, not the gradient stops
-                // But CSS conic-gradient isn't easily rotatable. We rotate the DIV.
-                // Reset rotation
                 spinner.style.transition = 'none';
                 spinner.style.transform = 'rotate(0deg)';
                 
                 setTimeout(() => {
                     spinner.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
-                    // Random end rotation + multiple spins
-                    // The Winning Zone is from 0deg to Xdeg.
-                    // The arrow is at Top (0deg visually, but in CSS usually 0 is top).
-                    // We need to rotate so the Winning Zone lands under the arrow.
                     const rand = Math.floor(Math.random() * 360);
                     spinner.style.transform = `rotate(${3600 + rand}deg)`;
                     
