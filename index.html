@@ -44,7 +44,7 @@
             position: relative;
             width: 100%;
             max-width: 900px;
-            height: 220px;
+            height: 180px; /* Slightly smaller for stacking */
             margin: 0 auto;
             overflow: hidden;
             background: #080808;
@@ -168,11 +168,29 @@
             <h2 class="text-3xl font-bold brand-font mb-2">Login</h2>
             <form onsubmit="auth.login(event)">
                 <div class="space-y-4">
-                    <input type="text" id="login-user" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
+                    <input type="text" id="login-user" maxlength="15" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
                     <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-wider py-4 rounded-lg transition mt-2">Start</button>
                 </div>
             </form>
             <button onclick="ui.closeModal('login-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+
+    <div id="withdraw-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
+        <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative text-center">
+            <div class="mx-auto bg-emerald-500/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
+                <i data-lucide="landmark" class="w-8 h-8 text-emerald-500"></i>
+            </div>
+            <h2 class="text-3xl font-bold brand-font mb-2 text-white">WITHDRAW</h2>
+            <p class="text-slate-500 mb-6">Transferring funds to your fake bank account...</p>
+            
+            <div class="bg-black p-4 rounded-lg border border-zinc-800 mb-6 flex justify-between items-center">
+                <span class="text-slate-400 text-sm">Amount</span>
+                <span class="text-emerald-400 font-mono font-bold text-xl" id="withdraw-amount">$0.00</span>
+            </div>
+
+            <button onclick="server.performWithdraw()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider py-4 rounded-lg transition">CONFIRM</button>
+            <button onclick="ui.closeModal('withdraw-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
         </div>
     </div>
 
@@ -265,7 +283,7 @@
         // --- CONTROLLER ---
         class ServerController {
             constructor() {
-                this.storageKey = 'flash_cases_tuti_final_v2';
+                this.storageKey = 'flash_cases_tuti_final_v3';
                 this.state = this.loadState();
             }
 
@@ -283,6 +301,17 @@
                 this.saveState(); window.location.reload(); 
             }
 
+            performWithdraw() {
+                if(this.state.balance > 0) {
+                    alert(`Successfully withdrew $${this.state.balance.toFixed(2)} to fake bank!`);
+                    this.state.balance = 0;
+                    this.saveState();
+                    ui.closeModal('withdraw-modal');
+                } else {
+                    alert("You're broke! Nothing to withdraw.");
+                }
+            }
+
             openCase(caseId) {
                 const c = DB.cases.find(x => x.id === caseId);
                 if (this.state.balance < c.price) return { error: "Insufficient funds" };
@@ -292,15 +321,12 @@
                 let pool;
 
                 if (caseId === 'case_knife') {
-                    // 5% Win Rate (Safe Nerf)
+                    // 5% Win Rate
                     const profitItem = c.items[c.items.length - 1];
                     const trashItems = c.items.slice(0, c.items.length - 1);
                     if (roll < 0.05) { pool = [profitItem]; } else { pool = trashItems; }
                 } else if (caseId === 'case_high') {
                     // 💀 BRUTAL EMBER ODDS 💀
-                    // 99% Chance for Glock Fade (Loss)
-                    // 0.9% Chance for Covert
-                    // 0.1% Chance for Gold
                     if (roll < 0.99) pool = c.items.filter(i => i.rarity === 'restricted');
                     else if (roll < 0.999) pool = c.items.filter(i => i.rarity === 'covert');
                     else pool = c.items.filter(i => i.rarity === 'gold');
@@ -340,12 +366,10 @@
                 
                 if (!targetItem) return { error: "Target invalid" };
 
-                // Burn item
                 this.state.inventory.splice(idx, 1);
                 
-                // Calc Chance: (Input / Output) * 0.8 House Edge
                 let chance = (sourceItem.price / targetItem.price) * 0.8;
-                if (chance > 0.80) chance = 0.80; // Cap at 80%
+                if (chance > 0.80) chance = 0.80;
 
                 const isWin = Math.random() < chance;
                 if (isWin) {
@@ -383,13 +407,19 @@
             closeModal: (id) => document.getElementById(id).classList.add('hidden'),
             openModal: (id) => document.getElementById(id).classList.remove('hidden'),
             formatMoney: (n) => '$' + n.toFixed(2),
+            openWithdraw: () => {
+                document.getElementById('withdraw-amount').innerText = ui.formatMoney(server.state.balance);
+                ui.openModal('withdraw-modal');
+            },
             renderNav: (state) => {
                 const el = document.getElementById('auth-section');
                 if (!state.username) {
                     el.innerHTML = `<button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black font-bold px-6 py-2 rounded-lg transition">LOGIN</button>`;
                 } else {
+                    // ADDED WITHDRAW BUTTON
                     el.innerHTML = `
-                        <div class="mr-4 text-right"><div class="font-bold text-white">${state.username}</div></div>
+                        <div class="mr-4 text-right hidden sm:block"><div class="font-bold text-white">${state.username}</div></div>
+                        <button onclick="ui.openWithdraw()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg font-bold mr-2 text-sm transition">WITHDRAW</button>
                         <div class="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-lg text-amber-500 font-mono font-bold text-lg">${ui.formatMoney(state.balance)}</div>
                         <button onclick="server.logout()" class="ml-2 text-slate-500 hover:text-white"><i data-lucide="log-out"></i></button>
                     `;
@@ -450,11 +480,14 @@
                         <p class="text-amber-500 font-mono text-2xl font-bold">${ui.formatMoney(c.price)}</p>
                     </div>
 
-                    <div class="spinner-container mb-6 relative">
-                        <div class="spinner-overlay-left"></div><div class="spinner-overlay-right"></div><div class="center-line"></div>
-                        <div class="items-strip" id="spinner-strip"></div>
-                        <div id="fast-overlay" class="absolute inset-0 bg-black z-20 flex items-center justify-center hidden"><span class="text-amber-500 font-bold animate-pulse">OPENING FAST...</span></div>
+                    <div id="spinners-area" class="flex flex-col gap-4 mb-6 w-full max-w-3xl mx-auto">
+                        <div class="spinner-container relative">
+                            <div class="spinner-overlay-left"></div><div class="spinner-overlay-right"></div><div class="center-line"></div>
+                            <div class="items-strip" id="spinner-strip-0"></div>
+                        </div>
                     </div>
+                    
+                    <div id="fast-overlay" class="fixed inset-0 bg-black/50 z-20 flex items-center justify-center hidden"><span class="text-amber-500 font-bold animate-pulse bg-black p-4 rounded">OPENING...</span></div>
 
                     <div class="flex flex-col items-center gap-6">
                         <div class="flex items-center gap-4 bg-zinc-900 p-2 rounded-xl border border-zinc-800">
@@ -489,7 +522,7 @@
                         </div>
                     </div>
                 `;
-                game.generateStrip(c);
+                game.generateStrip(c, 'spinner-strip-0');
             },
 
             inventory: (container) => {
@@ -549,7 +582,6 @@
                     </div>
                 `;
 
-                // CREATE MODALS
                 const modalHTML = (id, title) => `
                     <div id="${id}" class="hidden fixed inset-0 z-[100] bg-black/95 flex items-center justify-center p-4 backdrop-blur-sm">
                         <div class="bg-zinc-900 w-full max-w-4xl h-[80vh] rounded-2xl border border-zinc-700 flex flex-col shadow-2xl">
@@ -581,14 +613,28 @@
                     if(i === n) btn.className = "count-btn bg-amber-600 text-black px-4 py-2 rounded-lg font-bold transition";
                     else btn.className = "count-btn bg-zinc-800 text-slate-400 px-4 py-2 rounded-lg font-bold transition hover:text-white";
                 });
+                // Re-render strips based on count if NOT spinning
+                const area = document.getElementById('spinners-area');
+                if(area) {
+                    area.innerHTML = '';
+                    for(let i=0; i<n; i++) {
+                        area.innerHTML += `
+                            <div class="spinner-container relative">
+                                <div class="spinner-overlay-left"></div><div class="spinner-overlay-right"></div><div class="center-line"></div>
+                                <div class="items-strip" id="spinner-strip-${i}"></div>
+                            </div>
+                        `;
+                        const cId = router.current === 'case' ? DB.cases.find(c=> document.querySelector('h1').innerText.includes(c.name.toUpperCase())).id : 'case_low';
+                        game.generateStrip(DB.cases.find(c=>c.id===cId), `spinner-strip-${i}`);
+                    }
+                }
             },
 
-            generateStrip: (caseObj) => {
-                const strip = document.getElementById('spinner-strip');
+            generateStrip: (caseObj, elementId) => {
+                const strip = document.getElementById(elementId);
                 if(!strip) return;
                 let html = '';
                 for(let i=0; i<80; i++) {
-                    // VISUAL ONLY: Still show high tier items occasionally to bait user
                     const item = caseObj.items[Math.floor(Math.random() * caseObj.items.length)];
                     html += `
                         <div class="w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#0f0f0f] border-b-2 rarity-${item.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden">
@@ -601,7 +647,6 @@
             startOpening: (caseId) => {
                 const btn = document.getElementById('btn-spin');
                 const err = document.getElementById('spin-error');
-                const strip = document.getElementById('spinner-strip');
                 const c = DB.cases.find(x => x.id === caseId);
 
                 if(server.state.balance < (c.price * game.openCount)) {
@@ -617,36 +662,40 @@
                     if(res.success) game.currentDrops.push(res.item);
                 }
 
-                // If Fast Mode OR Multiple Cases -> Instant
-                if(game.fastMode || game.openCount > 1) {
+                // If Fast Mode -> Instant
+                if(game.fastMode) {
                     document.getElementById('fast-overlay').classList.remove('hidden');
                     setTimeout(() => {
                         game.showResults();
                         document.getElementById('fast-overlay').classList.add('hidden');
                         btn.disabled = false;
-                    }, 400); // Tiny delay for UX
+                        game.setCount(game.openCount); // Reset strips
+                    }, 400);
                 } else {
-                    // Classic 1x Animation
-                    const result = game.currentDrops[0];
-                    const cardWidth = 158; 
-                    const landIndex = 60; 
-                    const offset = (landIndex * cardWidth) - (strip.parentElement.offsetWidth / 2) + (150/2);
-                    const jitter = Math.floor(Math.random() * 50) - 25;
+                    // MULTI-ANIMATION
+                    game.currentDrops.forEach((result, index) => {
+                        const strip = document.getElementById(`spinner-strip-${index}`);
+                        if(!strip) return;
+                        
+                        const cardWidth = 158; 
+                        const landIndex = 60; 
+                        const offset = (landIndex * cardWidth) - (strip.parentElement.offsetWidth / 2) + (150/2);
+                        const jitter = Math.floor(Math.random() * 50) - 25;
 
-                    // Plant Winner
-                    const visItem = strip.children[landIndex];
-                    visItem.innerHTML = `<div class="relative z-10 scale-110 drop-shadow-2xl">${DB.renderItem(result)}</div>`;
-                    visItem.className = `w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#151515] border-b-4 rarity-${result.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] z-20 transform scale-105`;
+                        // Plant Winner
+                        const visItem = strip.children[landIndex];
+                        visItem.innerHTML = `<div class="relative z-10 scale-110 drop-shadow-2xl">${DB.renderItem(result)}</div>`;
+                        visItem.className = `w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#151515] border-b-4 rarity-${result.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] z-20 transform scale-105`;
 
-                    strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
-                    strip.style.transform = `translateX(-${offset + jitter}px)`;
+                        // Animate
+                        strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
+                        strip.style.transform = `translateX(-${offset + jitter}px)`;
+                    });
 
                     setTimeout(() => {
                         game.showResults();
-                        strip.style.transition = 'none';
-                        strip.style.transform = 'translateX(0)';
-                        game.generateStrip(c);
                         btn.disabled = false;
+                        game.setCount(game.openCount); // Reset strips
                     }, 4500);
                 }
             },
@@ -701,7 +750,6 @@
             openTargetSelector: () => {
                 const grid = document.getElementById('modal-target-grid');
                 grid.innerHTML = '';
-                // Get all items, filter out cheap ones relative to source if desired, or show all
                 DB.getAllItems().sort((a,b) => b.price - a.price).forEach(item => {
                     const el = document.createElement('div');
                     el.className = `bg-zinc-800 p-2 rounded border border-zinc-700 cursor-pointer hover:border-amber-500 flex flex-col items-center`;
@@ -733,7 +781,7 @@
                 if(upgrader.source && upgrader.target) {
                     let chance = (upgrader.source.price / upgrader.target.price) * 0.8 * 100;
                     if(chance > 80) chance = 80;
-                    if(chance < 1) chance = 1; // Minimum 1% visual
+                    if(chance < 1) chance = 1; 
                     
                     document.getElementById('win-chance').innerText = chance.toFixed(1) + '%';
                     document.getElementById('wheel-spinner').style.setProperty('--angle', `${chance * 3.6}deg`);
@@ -765,7 +813,6 @@
                         } else {
                             alert("UPGRADE FAILED.");
                         }
-                        // Reset
                         upgrader.source = null; upgrader.target = null;
                         router.navigate('upgrader');
                     }, 4100);
