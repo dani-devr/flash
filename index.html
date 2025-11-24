@@ -68,7 +68,7 @@
         .weapon-img { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: transform 0.3s ease; }
         .item-card-base:hover .weapon-img { transform: scale(1.1) rotate(-2deg); }
 
-        /* UPGRADER WHEEL */
+        /* UPGRADER & JACKPOT WHEEL */
         .wheel-container {
             position: relative;
             width: 300px;
@@ -87,7 +87,6 @@
             position: absolute;
             inset: 0;
             border-radius: 50%;
-            /* Conic gradient set dynamically via JS */
             transition: transform 5s cubic-bezier(0.1, 0, 0.05, 1);
             transform: rotate(0deg);
         }
@@ -127,12 +126,6 @@
         .mine-tile:hover { background-color: #27272a; }
         .mine-tile.revealed { cursor: default; }
 
-        /* CRASH */
-        canvas#crash-canvas {
-            border-bottom: 2px solid #333;
-            border-left: 2px solid #333;
-        }
-
         /* Rarity Colors */
         .rarity-consumer { border-color: #747474; --glow: #747474; }
         .rarity-mil-spec { border-color: #2b60b5; --glow: #2b60b5; }
@@ -140,6 +133,11 @@
         .rarity-classified { border-color: #b026c4; --glow: #b026c4; }
         .rarity-covert { border-color: #cc2323; --glow: #cc2323; }
         .rarity-gold { border-color: #e8b80e; --glow: #e8b80e; }
+
+        /* Roulette Colors */
+        .roul-red { background-color: #ef4444; color: white; }
+        .roul-black { background-color: #27272a; color: #94a3b8; }
+        .roul-green { background-color: #10b981; color: white; }
 
         .glow-text { text-shadow: 0 0 10px var(--glow); color: var(--glow); }
         .pop-in { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
@@ -193,6 +191,40 @@
         </div>
     </div>
 
+    <div id="deposit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
+        <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative">
+            <h2 class="text-3xl font-bold brand-font mb-2 text-white">DEPOSIT</h2>
+            <p class="text-slate-500 mb-6 text-sm">Roleplay Credit Card (Luhn Validated)</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="text-xs text-slate-400 uppercase font-bold">Amount</label>
+                    <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3 mt-1">
+                        <span class="text-emerald-500 mr-2">$</span>
+                        <input type="number" id="dep-amount" value="100" class="bg-transparent text-white font-bold w-full outline-none">
+                    </div>
+                </div>
+                <div>
+                    <label class="text-xs text-slate-400 uppercase font-bold">Card Number</label>
+                    <input type="text" id="dep-cc" placeholder="0000 0000 0000 0000" maxlength="19" class="w-full bg-black border border-zinc-700 rounded-lg p-3 mt-1 text-white font-mono">
+                </div>
+                <div class="flex gap-4">
+                    <div class="w-1/2">
+                        <label class="text-xs text-slate-400 uppercase font-bold">Expiry</label>
+                        <input type="text" placeholder="MM/YY" maxlength="5" class="w-full bg-black border border-zinc-700 rounded-lg p-3 mt-1 text-white font-mono">
+                    </div>
+                    <div class="w-1/2">
+                        <label class="text-xs text-slate-400 uppercase font-bold">CVV</label>
+                        <input type="text" placeholder="123" maxlength="3" class="w-full bg-black border border-zinc-700 rounded-lg p-3 mt-1 text-white font-mono">
+                    </div>
+                </div>
+            </div>
+
+            <button onclick="server.processDeposit()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider py-4 rounded-lg transition mt-6">PAY NOW</button>
+            <button onclick="ui.closeModal('deposit-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+
     <div id="withdraw-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative text-center">
             <div class="mx-auto bg-emerald-500/10 w-16 h-16 rounded-full flex items-center justify-center mb-4">
@@ -227,6 +259,27 @@
     </div>
 
     <script>
+        // --- UTILS ---
+        const Utils = {
+            luhnCheck: (val) => {
+                if (!val) return false;
+                // Remove spaces
+                val = val.replace(/\s+/g, '');
+                if (/[^0-9]/.test(val) || val.length < 13) return false;
+                let checksum = 0;
+                let j = 1;
+                for (let i = val.length - 1; i >= 0; i--) {
+                    let calc = 0;
+                    calc = Number(val.charAt(i)) * j;
+                    if (calc > 9) { checksum = checksum + 1; calc = calc - 10; }
+                    checksum = checksum + calc;
+                    if (j == 1) { j = 2; } else { j = 1; }
+                }
+                return (checksum % 10) == 0;
+            },
+            sleep: (ms) => new Promise(resolve => setTimeout(resolve, ms))
+        };
+
         // --- ASSETS & DATA ---
         const ASSETS = {
             ak47: "https://cdn.csgoskins.gg/public/uih/items/aHR0cHM6Ly9jZG4uY3Nnb3NraW5zLmdnL3B1YmxpYy9pbWFnZXMvYnVja2V0cy9lY29uL2RlZmF1bHRfZ2VuZXJhdGVkL3dlYXBvbl9hazQ3X2N1X2FrNDdfbmlnaHR3aXNoX2xpZ2h0LjA4YTY1NjE1ZDdjZGYyZjhkNGQ2NTBmOTk5OWZjOTQxNjlmZjg3MjgucG5n/auto/auto/85/notrim/5c08a9a697a566343389a078253f7fe3.webp",
@@ -294,7 +347,7 @@
         // --- CONTROLLER ---
         class ServerController {
             constructor() {
-                this.storageKey = 'flash_cases_tuti_final_v5';
+                this.storageKey = 'flash_cases_tuti_extended';
                 this.state = this.loadState();
             }
 
@@ -321,6 +374,26 @@
                 } else {
                     alert("You're broke! Nothing to withdraw.");
                 }
+            }
+
+            processDeposit() {
+                const cc = document.getElementById('dep-cc').value;
+                const amount = parseFloat(document.getElementById('dep-amount').value);
+                
+                if(!Utils.luhnCheck(cc)) {
+                    alert("Transaction Failed: Invalid Card Number (Luhn Check Failed)");
+                    return;
+                }
+                
+                if(isNaN(amount) || amount <= 0) {
+                    alert("Invalid Amount");
+                    return;
+                }
+
+                this.state.balance += amount;
+                this.saveState();
+                alert(`Successfully deposited $${amount.toFixed(2)}!`);
+                ui.closeModal('deposit-modal');
             }
 
             processBet(amount) {
@@ -386,13 +459,9 @@
                 
                 if (!targetItem) return { error: "Target invalid" };
 
-                // REMOVE SOURCE ITEM REGARDLESS OF OUTCOME
                 this.state.inventory.splice(idx, 1);
                 
-                // MATH: Pure value ratio * 0.9 (House Edge 10%)
                 let chance = (sourceItem.price / targetItem.price) * 0.9;
-                
-                // Cap chance
                 if (chance > 0.80) chance = 0.80; 
 
                 const isWin = Math.random() < chance;
@@ -427,6 +496,8 @@
                 else if (page === 'minigames') pages.minigames(app);
                 else if (page === 'crash') pages.crash(app);
                 else if (page === 'mines') pages.mines(app);
+                else if (page === 'roulette') pages.roulette(app);
+                else if (page === 'jackpot') pages.jackpot(app);
                 lucide.createIcons();
             }
         };
@@ -439,6 +510,9 @@
                 document.getElementById('withdraw-amount').innerText = ui.formatMoney(server.state.balance);
                 ui.openModal('withdraw-modal');
             },
+            openDeposit: () => {
+                ui.openModal('deposit-modal');
+            },
             renderNav: (state) => {
                 const el = document.getElementById('auth-section');
                 if (!state.username) {
@@ -446,6 +520,7 @@
                 } else {
                     el.innerHTML = `
                         <div class="mr-4 text-right hidden sm:block"><div class="font-bold text-white">${state.username}</div></div>
+                        <button onclick="ui.openDeposit()" class="bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-emerald-400 px-3 py-2 rounded-lg font-bold mr-2 text-sm transition">DEPOSIT</button>
                         <button onclick="ui.openWithdraw()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg font-bold mr-2 text-sm transition">WITHDRAW</button>
                         <div class="bg-zinc-900 border border-zinc-800 px-4 py-2 rounded-lg text-amber-500 font-mono font-bold text-lg">${ui.formatMoney(state.balance)}</div>
                         <button onclick="server.logout()" class="ml-2 text-slate-500 hover:text-white"><i data-lucide="log-out"></i></button>
@@ -496,30 +571,128 @@
             },
 
             minigames: (container) => {
+                const games = [
+                    { id: 'crash', name: 'Crash', color: 'text-red-500', icon: 'trending-up', desc: 'Cash out before it crashes.' },
+                    { id: 'mines', name: 'Mines', color: 'text-emerald-500', icon: 'bomb', desc: 'Avoid the bombs, find the gems.' },
+                    { id: 'roulette', name: 'Roulette', color: 'text-purple-500', icon: 'disc', desc: 'Red, Black, or Green.' },
+                    { id: 'jackpot', name: 'Jackpot', color: 'text-amber-500', icon: 'pie-chart', desc: 'Winner takes all.' }
+                ];
+                
                 container.innerHTML = `
                     <div class="text-center mb-12">
                         <h1 class="text-5xl font-black italic text-white mb-2">MINIGAMES</h1>
                         <p class="text-slate-500 uppercase tracking-widest">High Risk, High Reward</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-                        <div onclick="router.navigate('crash')" class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-amber-500 cursor-pointer group transition relative overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                        ${games.map(g => `
+                        <div onclick="router.navigate('${g.id}')" class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-amber-500 cursor-pointer group transition relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
                             <div class="relative z-10 flex flex-col items-center">
-                                <i data-lucide="trending-up" class="w-24 h-24 text-red-500 mb-4 group-hover:scale-110 transition"></i>
-                                <h2 class="text-4xl font-black italic text-white">CRASH</h2>
-                                <p class="text-slate-400 mt-2">Cash out before it crashes.</p>
+                                <i data-lucide="${g.icon}" class="w-24 h-24 ${g.color} mb-4 group-hover:scale-110 transition"></i>
+                                <h2 class="text-4xl font-black italic text-white uppercase">${g.name}</h2>
+                                <p class="text-slate-400 mt-2">${g.desc}</p>
                             </div>
                         </div>
-                        <div onclick="router.navigate('mines')" class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-amber-500 cursor-pointer group transition relative overflow-hidden">
-                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
-                            <div class="relative z-10 flex flex-col items-center">
-                                <i data-lucide="bomb" class="w-24 h-24 text-emerald-500 mb-4 group-hover:scale-110 transition"></i>
-                                <h2 class="text-4xl font-black italic text-white">MINES</h2>
-                                <p class="text-slate-400 mt-2">Avoid the bombs, find the gems.</p>
+                        `).join('')}
+                    </div>
+                `;
+            },
+
+            roulette: (container) => {
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto">
+                         <div class="flex items-center gap-4 mb-6">
+                            <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
+                            <h1 class="text-3xl font-black italic text-white">ROULETTE</h1>
+                        </div>
+
+                        <div class="spinner-container relative mb-8 border-2 border-amber-600">
+                            <div class="center-line z-30"></div>
+                            <div class="items-strip" id="roulette-strip"></div>
+                        </div>
+
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                            <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
+                                <div class="text-xs text-slate-500 font-bold uppercase mb-2">Bet Amount</div>
+                                <div class="flex items-center bg-black border border-zinc-700 rounded px-3 py-2">
+                                    <span class="text-emerald-500 mr-2">$</span>
+                                    <input type="number" id="roul-bet" value="10" class="bg-transparent text-white font-bold w-full outline-none">
+                                </div>
                             </div>
+                             <div class="md:col-span-2 bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex items-center justify-between">
+                                <div class="text-slate-400 text-sm">Last 5:</div>
+                                <div class="flex gap-2" id="roul-history">
+                                    <span class="w-8 h-8 rounded bg-red-500"></span>
+                                    <span class="w-8 h-8 rounded bg-black border border-zinc-700"></span>
+                                </div>
+                             </div>
+                        </div>
+
+                        <div class="grid grid-cols-3 gap-4">
+                            <button onclick="rouletteGame.play('red')" id="btn-r-red" class="py-6 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-2xl uppercase transition relative overflow-hidden group">
+                                Win 2x
+                                <div class="text-sm font-normal opacity-75">Red (1-7)</div>
+                            </button>
+                             <button onclick="rouletteGame.play('green')" id="btn-r-green" class="py-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-2xl uppercase transition relative overflow-hidden group">
+                                Win 14x
+                                <div class="text-sm font-normal opacity-75">Green (0)</div>
+                            </button>
+                             <button onclick="rouletteGame.play('black')" id="btn-r-black" class="py-6 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-black text-2xl uppercase transition relative overflow-hidden group">
+                                Win 2x
+                                <div class="text-sm font-normal opacity-75">Black (8-14)</div>
+                            </button>
                         </div>
                     </div>
                 `;
+                rouletteGame.init();
+            },
+
+            jackpot: (container) => {
+                container.innerHTML = `
+                     <div class="max-w-4xl mx-auto">
+                         <div class="flex items-center gap-4 mb-6">
+                            <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
+                            <h1 class="text-3xl font-black italic text-white">JACKPOT</h1>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                            
+                            <div class="flex flex-col items-center justify-center bg-zinc-900 p-8 rounded-2xl border border-zinc-800">
+                                <div class="wheel-container mb-6" style="width: 350px; height: 350px;">
+                                    <div class="wheel-spinner" id="jp-spinner" style="--angle: 0deg; background: conic-gradient(#333 0% 100%);"></div>
+                                    <div class="wheel-inner" style="width: 310px; height: 310px;">
+                                        <div class="wheel-arrow border-t-white"></div>
+                                        <div class="text-center">
+                                            <div class="text-xs text-slate-500 uppercase font-bold">Total Pot</div>
+                                            <div class="text-4xl font-black text-white tracking-tighter" id="jp-pot-total">$0.00</div>
+                                            <div class="text-sm text-amber-500 font-bold mt-2" id="jp-chance">Your Chance: 0%</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="w-full" id="jp-timer-bar"><div class="h-2 bg-zinc-800 rounded overflow-hidden"><div class="h-full bg-amber-500 w-0" id="jp-timer-fill"></div></div></div>
+                            </div>
+
+                            <div class="flex flex-col gap-4">
+                                <div class="bg-zinc-900 p-6 rounded-xl border border-zinc-800">
+                                    <div class="text-xs text-slate-500 font-bold uppercase mb-2">Enter Pot (Min $10)</div>
+                                    <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3">
+                                        <span class="text-emerald-500 mr-2">$</span>
+                                        <input type="number" id="jp-bet" value="50" class="bg-transparent text-white font-bold w-full outline-none">
+                                    </div>
+                                    <button onclick="jackpotGame.join()" id="btn-jp-join" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black text-xl py-4 rounded-xl transition uppercase mt-4">JOIN POT</button>
+                                </div>
+
+                                <div class="bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex-1 overflow-hidden flex flex-col">
+                                    <h3 class="text-slate-400 font-bold uppercase text-xs mb-4">Players</h3>
+                                    <div class="space-y-2 overflow-y-auto" id="jp-players">
+                                        </div>
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+                `;
+                jackpotGame.reset();
             },
 
             crash: (container) => {
@@ -705,7 +878,7 @@
 
                         <div class="flex flex-col items-center gap-4 z-10">
                             <div class="wheel-container">
-                                <div class="wheel-spinner" id="wheel-spinner" style="--angle: 0deg"></div>
+                                <div class="wheel-spinner" id="wheel-spinner" style="--angle: 0deg; background: conic-gradient(#f59e0b 0deg var(--angle), #222 var(--angle) 360deg);"></div>
                                 <div class="wheel-inner">
                                     <div class="wheel-arrow"></div> <span class="text-4xl font-black text-white tracking-tighter" id="win-chance">0%</span>
                                 </div>
@@ -735,6 +908,218 @@
                 d.innerHTML = modalHTML('modal-source', 'Select Your Item') + modalHTML('modal-target', 'Select Target Skin');
                 document.body.appendChild(d);
                 lucide.createIcons();
+            }
+        };
+
+        // --- GAME LOGIC: ROULETTE ---
+        const rouletteGame = {
+            history: [1, 14, 3, 0, 9],
+            spinning: false,
+            
+            init: () => {
+                rouletteGame.renderStrip();
+                rouletteGame.updateHistory();
+            },
+
+            renderStrip: () => {
+                const strip = document.getElementById('roulette-strip');
+                let html = '';
+                // Generate a repeated pattern of 15 tiles (0-14)
+                for(let i=0; i<10; i++) {
+                    for(let n=0; n<=14; n++) {
+                         let color = n === 0 ? 'roul-green' : (n <= 7 ? 'roul-red' : 'roul-black');
+                         html += `<div class="w-[75px] h-[75px] flex-shrink-0 mx-0.5 rounded ${color} flex items-center justify-center font-bold text-xl">${n}</div>`;
+                    }
+                }
+                strip.innerHTML = html;
+            },
+
+            updateHistory: () => {
+                const hist = document.getElementById('roul-history');
+                if(hist) {
+                    hist.innerHTML = rouletteGame.history.slice(-5).map(n => {
+                        let color = n === 0 ? 'bg-emerald-500' : (n <= 7 ? 'bg-red-500' : 'bg-zinc-700');
+                        return `<span class="w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${color} text-white">${n}</span>`;
+                    }).join('');
+                }
+            },
+
+            play: (colorChoice) => {
+                if(rouletteGame.spinning) return;
+                const bet = parseFloat(document.getElementById('roul-bet').value);
+                if(isNaN(bet) || bet <= 0) return alert("Invalid Bet");
+                if(!server.processBet(bet)) return alert("Insufficient Funds");
+
+                rouletteGame.spinning = true;
+                ['btn-r-red', 'btn-r-green', 'btn-r-black'].forEach(id => document.getElementById(id).classList.add('opacity-50', 'pointer-events-none'));
+
+                // Logic
+                const roll = Math.floor(Math.random() * 15); // 0-14
+                
+                // Animate
+                const strip = document.getElementById('roulette-strip');
+                const cardWidth = 79; // 75 + 4 margin
+                // Land somewhere in the middle sets (set 7 out of 10)
+                const setIndex = 7;
+                const offset = (setIndex * 15 * cardWidth) + (roll * cardWidth) - (strip.parentElement.offsetWidth / 2) + (75/2);
+                const jitter = Math.floor(Math.random() * 40) - 20;
+                
+                strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
+                strip.style.transform = `translateX(-${offset + jitter}px)`;
+
+                setTimeout(() => {
+                    let won = false;
+                    let multiplier = 0;
+
+                    if(roll === 0 && computerChoice === 'green') { won = true; multiplier = 14; }
+                    else if(roll >= 1 && roll <= 7 && computerChoice === 'red') { won = true; multiplier = 2; }
+                    else if(roll >= 8 && roll <= 14 && computerChoice === 'black') { won = true; multiplier = 2; }
+
+                    if(won) {
+                        const profit = bet * multiplier;
+                        server.addWin(profit);
+                        alert(`You WON $${profit.toFixed(2)}!`);
+                    }
+
+                    rouletteGame.history.push(roll);
+                    rouletteGame.updateHistory();
+                    rouletteGame.spinning = false;
+                    strip.style.transition = 'none';
+                    strip.style.transform = 'translateX(0px)';
+                    ['btn-r-red', 'btn-r-green', 'btn-r-black'].forEach(id => document.getElementById(id).classList.remove('opacity-50', 'pointer-events-none'));
+                }, 4100);
+            }
+        };
+
+        // --- GAME LOGIC: JACKPOT ---
+        const jackpotGame = {
+            pot: [],
+            active: false,
+            countdown: null,
+
+            reset: () => {
+                jackpotGame.pot = [];
+                jackpotGame.active = false;
+                if(jackpotGame.countdown) clearInterval(jackpotGame.countdown);
+                jackpotGame.updateUI();
+            },
+
+            join: async () => {
+                if(jackpotGame.active) return;
+                const bet = parseFloat(document.getElementById('jp-bet').value);
+                if(isNaN(bet) || bet < 10) return alert("Min bet is $10");
+                if(!server.processBet(bet)) return alert("Insufficient Funds");
+
+                document.getElementById('btn-jp-join').disabled = true;
+                document.getElementById('btn-jp-join').innerText = "JOINED";
+                
+                // Add User
+                jackpotGame.pot.push({ name: server.state.username, amount: bet, color: '#f59e0b', isUser: true });
+                jackpotGame.updateUI();
+
+                // Simulate Bots
+                jackpotGame.active = true;
+                const botNames = ["xX_Slayer_Xx", "GabeN", "TutiLover", "SkinFreak", "Donk"];
+                
+                let timer = 0;
+                const timerEl = document.getElementById('jp-timer-fill');
+                
+                // Start Countdown
+                jackpotGame.countdown = setInterval(() => {
+                    timer += 1;
+                    if(timerEl) timerEl.style.width = `${timer}%`;
+                    if(timer >= 100) {
+                        clearInterval(jackpotGame.countdown);
+                        jackpotGame.spin();
+                    }
+                }, 50);
+
+                // Random bots join
+                const botCount = Math.floor(Math.random() * 3) + 1;
+                for(let i=0; i<botCount; i++) {
+                    await Utils.sleep(Math.random() * 1500 + 500);
+                    const botBet = Math.floor(Math.random() * bet * 2) + 10;
+                    const colors = ['#ef4444', '#3b82f6', '#10b981', '#a855f7'];
+                    jackpotGame.pot.push({ 
+                        name: botNames[Math.floor(Math.random()*botNames.length)], 
+                        amount: botBet, 
+                        color: colors[i % colors.length], 
+                        isUser: false 
+                    });
+                    jackpotGame.updateUI();
+                }
+            },
+
+            updateUI: () => {
+                if(!document.getElementById('jp-players')) return;
+                const total = jackpotGame.pot.reduce((a,b) => a + b.amount, 0);
+                document.getElementById('jp-pot-total').innerText = ui.formatMoney(total);
+                
+                const list = document.getElementById('jp-players');
+                list.innerHTML = jackpotGame.pot.map(p => `
+                    <div class="flex items-center justify-between bg-black p-3 rounded border-l-4" style="border-color: ${p.color}">
+                        <span class="font-bold text-white">${p.name}</span>
+                        <span class="font-mono text-slate-400">${ui.formatMoney(p.amount)} (${((p.amount/total)*100).toFixed(1)}%)</span>
+                    </div>
+                `).join('');
+
+                const userEntry = jackpotGame.pot.find(p => p.isUser);
+                if(userEntry) {
+                    const chance = (userEntry.amount / total) * 100;
+                    document.getElementById('jp-chance').innerText = `Your Chance: ${chance.toFixed(2)}%`;
+                }
+
+                // Update Wheel Gradient
+                if(total > 0) {
+                    let gradient = [];
+                    let currentDeg = 0;
+                    jackpotGame.pot.forEach(p => {
+                        const deg = (p.amount / total) * 360;
+                        gradient.push(`${p.color} ${currentDeg}deg ${currentDeg + deg}deg`);
+                        currentDeg += deg;
+                    });
+                    document.getElementById('jp-spinner').style.background = `conic-gradient(${gradient.join(', ')})`;
+                }
+            },
+
+            spin: () => {
+                const total = jackpotGame.pot.reduce((a,b) => a + b.amount, 0);
+                // Determine winner
+                let r = Math.random() * total;
+                let accum = 0;
+                let winner = null;
+                let winningAngle = 0;
+
+                for(let p of jackpotGame.pot) {
+                    if(r >= accum && r < accum + p.amount) {
+                        winner = p;
+                        // Center of this segment
+                        const startDeg = (accum / total) * 360;
+                        const endDeg = ((accum + p.amount) / total) * 360;
+                        // Target is meant to be at top (0deg). 
+                        // We need to rotate the wheel so this segment is at top.
+                        // Currently 0 is top. 
+                        winningAngle = 360 - ((startDeg + endDeg) / 2);
+                        break;
+                    }
+                    accum += p.amount;
+                }
+
+                const spinner = document.getElementById('jp-spinner');
+                const finalRot = 3600 + winningAngle;
+                spinner.style.transition = 'transform 6s cubic-bezier(0.1, 0, 0.05, 1)';
+                spinner.style.transform = `rotate(${finalRot}deg)`;
+
+                setTimeout(() => {
+                    if(winner.isUser) {
+                        const profit = total * 0.95; // 5% Tax
+                        server.addWin(profit);
+                        alert(`JACKPOT! You won ${ui.formatMoney(profit)} (after tax)`);
+                    } else {
+                        alert(`${winner.name} won the pot.`);
+                    }
+                    router.navigate('jackpot');
+                }, 6500);
             }
         };
 
@@ -916,13 +1301,12 @@
                     let chance = (upgrader.source.price / upgrader.target.price) * 0.9 * 100;
                     if(chance > 80) chance = 80;
                     
-                    // Allow really small chances
                     upgrader.winChance = chance;
-                    
                     const displayChance = chance < 0.01 ? "< 0.01%" : chance.toFixed(2) + '%';
                     
                     document.getElementById('win-chance').innerText = displayChance;
                     document.getElementById('wheel-spinner').style.setProperty('--angle', `${chance * 3.6}deg`);
+                    document.getElementById('wheel-spinner').style.background = `conic-gradient(#f59e0b 0deg var(--angle), #222 var(--angle) 360deg)`;
                     
                     const btn = document.getElementById('btn-upgrade');
                     btn.disabled = false;
@@ -936,37 +1320,28 @@
                 btn.disabled = true;
                 const spinner = document.getElementById('wheel-spinner');
                 
-                // RESET
                 spinner.style.transition = 'none';
                 spinner.style.transform = 'rotate(0deg)';
 
-                // PERFORM LOGIC
                 const res = server.upgrade(upgrader.source.uid, upgrader.target.name);
                 
                 setTimeout(() => {
                     spinner.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
-                    
-                    // CALCULATE ROTATION BASED ON RESULT TO PREVENT VISUAL BUGS
-                    // If Win: Land in the colored area (0 to angle)
-                    // If Loss: Land in the black area (angle to 360)
-                    
-                    const angleSize = upgrader.winChance * 3.6; // The size of the win slice in degrees
-                    let targetRotation = 3600; // Base spins
+                    const angleSize = upgrader.winChance * 3.6; 
+                    let targetRotation = 3600; 
 
                     if (res.win) {
-                        // Land somewhere between 5deg and (angleSize - 5deg) to be safe
                         const safeBuffer = Math.min(5, angleSize / 2);
                         const rand = Math.random() * (angleSize - (safeBuffer*2)) + safeBuffer;
                         targetRotation += rand;
                     } else {
-                        // Land somewhere between (angleSize + 5) and 355
                         const safeBuffer = 5;
                         const loseZone = 360 - angleSize - (safeBuffer*2);
                         const rand = Math.random() * loseZone + angleSize + safeBuffer;
                         targetRotation += rand;
                     }
 
-                    spinner.style.transform = `rotate(-${targetRotation}deg)`; // Rotate counter clockwise so logic aligns with 0 at top
+                    spinner.style.transform = `rotate(-${targetRotation}deg)`; 
                     
                     setTimeout(() => {
                         if(res.win) {
@@ -990,7 +1365,6 @@
             cashedOut: false,
             canvas: null,
             ctx: null,
-            animationId: null,
 
             init: () => {
                 const canvas = document.getElementById('crash-canvas');
@@ -1016,7 +1390,6 @@
 
             action: () => {
                 if (!crashGame.running) {
-                    // START
                     const betInput = document.getElementById('crash-bet');
                     const amount = parseFloat(betInput.value);
                     if (isNaN(amount) || amount <= 0) return alert("Invalid bet");
@@ -1028,7 +1401,6 @@
                         alert("Insufficient Funds");
                     }
                 } else {
-                    // CASHOUT
                     crashGame.doCashout();
                 }
             },
@@ -1045,7 +1417,6 @@
                     if (!crashGame.running || router.current !== 'crash') return;
                     
                     const elapsed = (Date.now() - startTime) / 1000;
-                    // Simple exponential growth formula
                     crashGame.multiplier = 1 + (0.06 * elapsed) + Math.pow(elapsed, 2) * 0.04; 
 
                     document.getElementById('crash-multiplier').innerText = crashGame.multiplier.toFixed(2) + 'x';
@@ -1095,9 +1466,7 @@
             },
 
             getCrashPoint: () => {
-                // E = 0.99 / (1 - U)
-                // 1% Instant crash house edge
-                if (Math.random() < 0.03) return 1.00; // Increased instant crash for "Tuti" feel
+                if (Math.random() < 0.03) return 1.00; 
                 const r = Math.random();
                 const crash = 0.99 / (1 - r);
                 return Math.max(1.00, Math.min(crash, 10000));
@@ -1109,31 +1478,19 @@
                 ctx.clearRect(0, 0, cvs.width, cvs.height);
 
                 ctx.beginPath();
-                ctx.strokeStyle = '#f59e0b'; // Amber
+                ctx.strokeStyle = '#f59e0b';
                 ctx.lineWidth = 4;
                 ctx.lineCap = 'round';
 
-                // Map time/mult to canvas coords
-                // Simple Bezier curve aesthetic
                 const startX = 0;
                 const startY = cvs.height;
                 
-                // Dynamic scaling
-                const scaleX = cvs.width / (progress + 2); 
-                const scaleY = cvs.height / (crashGame.multiplier + 0.5);
-
-                ctx.moveTo(startX, startY);
-                
-                // Draw curve
-                // For simplicity in this demo, drawing a quadratic curve based on progress
                 let x = Math.min(cvs.width, progress * 50); 
                 let y = cvs.height - (Math.min(cvs.height, (crashGame.multiplier - 1) * 100));
                 
-                // Better visual:
                 ctx.quadraticCurveTo(x/2, cvs.height, x, y);
                 ctx.stroke();
 
-                // Gradient fill
                 ctx.lineTo(x, cvs.height);
                 ctx.lineTo(0, cvs.height);
                 ctx.fillStyle = 'rgba(245, 158, 11, 0.1)';
@@ -1180,7 +1537,6 @@
                     minesGame.revealed = Array(25).fill(false);
                     minesGame.currentMult = 1.00;
                     
-                    // Generate Grid
                     minesGame.grid = Array(25).fill(0);
                     let placed = 0;
                     while(placed < count) {
@@ -1191,8 +1547,7 @@
                         }
                     }
 
-                    // UI Updates
-                    minesGame.renderGrid(); // Reset Visuals
+                    minesGame.renderGrid();
                     document.getElementById('btn-mines-start').classList.add('hidden');
                     document.getElementById('btn-mines-cashout').classList.remove('hidden');
                     document.getElementById('btn-mines-cashout').innerText = "CASHOUT $0.00";
@@ -1208,35 +1563,27 @@
                 const tile = document.getElementById(`mine-${idx}`);
                 
                 if(minesGame.grid[idx] === 1) {
-                    // BOOM
                     tile.classList.add('bg-red-500', 'border-red-700');
                     tile.innerHTML = '<i data-lucide="bomb" class="text-white animate-bounce"></i>';
                     minesGame.gameOver(false);
                 } else {
-                    // SAFE
                     minesGame.revealed[idx] = true;
                     tile.classList.add('bg-zinc-700', 'border-zinc-600', 'revealed');
                     tile.innerHTML = '<i data-lucide="gem" class="text-emerald-400 pop-in"></i>';
                     
-                    // Calculate Multiplier
-                    // Formula: current * (total_remaining / safe_remaining)
                     const totalTiles = 25;
                     const safeTiles = 25 - minesGame.minesCount;
                     const revealedCount = minesGame.revealed.filter(Boolean).length;
                     
-                    // Standard Mines Math
-                    // Comb(25, mines) / Comb(25-revealed, mines)
-                    // Simplified iterative multiplier:
                     const remainingTotal = 25 - (revealedCount - 1);
                     const remainingSafe = safeTiles - (revealedCount - 1);
                     const stepMult = remainingTotal / remainingSafe;
                     
                     minesGame.currentMult *= stepMult;
-                    // House Edge Adjustment (1%)
                     minesGame.currentMult *= 0.99;
 
                     if(revealedCount === safeTiles) {
-                        minesGame.cashout(); // Auto win all
+                        minesGame.cashout(); 
                     } else {
                         minesGame.updateStats();
                     }
@@ -1251,7 +1598,6 @@
                 document.getElementById('mines-profit').innerText = ui.formatMoney(profit > 0 ? profit : 0);
                 document.getElementById('btn-mines-cashout').innerText = `CASHOUT ${ui.formatMoney(total)}`;
                 
-                // Calc Next Mult
                 const revealedCount = minesGame.revealed.filter(Boolean).length;
                 const remainingTotal = 25 - revealedCount;
                 const remainingSafe = (25 - minesGame.minesCount) - revealedCount;
@@ -1269,7 +1615,6 @@
 
             gameOver: (win) => {
                 minesGame.active = false;
-                // Reveal All
                 minesGame.grid.forEach((isMine, i) => {
                     const tile = document.getElementById(`mine-${i}`);
                     if(isMine) {
