@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Flash Cases - Tuti No Profit Edition</title>
+    <title>Flash Cases - Tuti Gambling Edition</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
@@ -19,6 +19,7 @@
             background-color: var(--bg-dark);
             color: #e2e8f0;
             overflow-x: hidden;
+            -webkit-font-smoothing: antialiased;
         }
 
         h1, h2, h3, .brand-font {
@@ -44,7 +45,7 @@
             position: relative;
             width: 100%;
             max-width: 900px;
-            height: 180px; /* Slightly smaller for stacking */
+            height: 180px; 
             margin: 0 auto;
             overflow: hidden;
             background: #080808;
@@ -86,8 +87,9 @@
             position: absolute;
             inset: 0;
             border-radius: 50%;
-            background: conic-gradient(var(--primary) 0deg, var(--primary) var(--angle), #0a0a0a var(--angle), #0a0a0a 360deg);
+            /* Conic gradient set dynamically via JS */
             transition: transform 5s cubic-bezier(0.1, 0, 0.05, 1);
+            transform: rotate(0deg);
         }
 
         .wheel-inner {
@@ -115,6 +117,20 @@
             border-top: 25px solid #fff;
             z-index: 20;
             filter: drop-shadow(0 0 10px #fff);
+        }
+
+        /* MINES */
+        .mine-tile {
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .mine-tile:hover { background-color: #27272a; }
+        .mine-tile.revealed { cursor: default; }
+
+        /* CRASH */
+        canvas#crash-canvas {
+            border-bottom: 2px solid #333;
+            border-left: 2px solid #333;
         }
 
         /* Rarity Colors */
@@ -152,6 +168,7 @@
                     </div>
                     <div class="hidden md:flex items-center gap-1 bg-white/5 p-1 rounded-lg border border-white/5">
                         <button onclick="router.navigate('home')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300">Cases</button>
+                        <button onclick="router.navigate('minigames')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300 text-amber-500">Minigames</button>
                         <button onclick="router.navigate('upgrader')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300">Upgrader</button>
                         <button onclick="router.navigate('inventory')" class="px-4 py-2 rounded-md text-sm font-bold transition hover:bg-white/10 hover:text-white text-slate-300">Inventory</button>
                     </div>
@@ -197,10 +214,7 @@
     <div id="drop-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center bg-black/95 backdrop-blur-md" onclick="ui.closeModal('drop-modal')">
         <div class="text-center w-full max-w-5xl p-4" id="drop-content" onclick="event.stopPropagation()">
             <h2 id="drop-title" class="text-6xl md:text-8xl font-black text-white mb-8 drop-shadow-[0_0_25px_rgba(255,255,255,0.1)] brand-font tracking-widest italic transform -skew-x-6">DROPPED!</h2>
-            
-            <div id="drop-grid" class="flex flex-wrap justify-center gap-6 mb-10">
-                </div>
-
+            <div id="drop-grid" class="flex flex-wrap justify-center gap-6 mb-10"></div>
             <div class="flex justify-center gap-4">
                 <button onclick="game.sellAllDrops()" class="bg-zinc-800 hover:bg-zinc-700 text-slate-300 px-10 py-4 rounded-xl font-bold transition border border-zinc-700 flex items-center gap-2">
                     <i data-lucide="dollar-sign" class="w-5 h-5 text-red-400"></i> Sell All
@@ -229,7 +243,6 @@
 
             // Cases
             caseLow: "https://media.csgo-skins.com/container/low-case.png",
-            caseMed: "https://media.csgo-skins.com/container/medium-case.png",
             caseHigh: "https://media.csgo-skins.com/container/ember-case.png",
             caseKnife: "https://media.csgo-skins.com/container/knife-case.png?v2"
         };
@@ -257,7 +270,6 @@
                 {
                     id: 'case_knife', name: 'Knife Crate', price: 900.00, image: ASSETS.caseKnife, color: 'border-red-600',
                     items: [
-                        // THE LOSSES (9 Items < $900)
                         { name: 'Navaja | Safari', rarity: 'gold', price: 60.00, img: ASSETS.k4, filter: 'grayscale(100%) sepia(80%)' },
                         { name: 'Gut | Boreal', rarity: 'gold', price: 75.00, img: ASSETS.k2, filter: 'grayscale(100%)' },
                         { name: 'Shadow | Rust', rarity: 'gold', price: 90.00, img: ASSETS.k3, filter: 'sepia(80%) contrast(1.2)' },
@@ -267,7 +279,6 @@
                         { name: 'Huntsman | Blue', rarity: 'gold', price: 350.00, img: ASSETS.k4, filter: 'hue-rotate(180deg)' },
                         { name: 'M9 | Damacus', rarity: 'gold', price: 600.00, img: ASSETS.k2, filter: 'contrast(0.8)' },
                         { name: 'Butterfly | Stained', rarity: 'gold', price: 800.00, img: ASSETS.k3, filter: 'brightness(1.1)' },
-                        // THE PROFIT (1 Item > $900)
                         { name: 'Karambit | SAPPHIRE', rarity: 'gold', price: 5000.00, img: ASSETS.k1, filter: 'hue-rotate(220deg) saturate(300%) contrast(1.2)' }
                     ]
                 }
@@ -283,7 +294,7 @@
         // --- CONTROLLER ---
         class ServerController {
             constructor() {
-                this.storageKey = 'flash_cases_tuti_final_v3';
+                this.storageKey = 'flash_cases_tuti_final_v5';
                 this.state = this.loadState();
             }
 
@@ -312,6 +323,18 @@
                 }
             }
 
+            processBet(amount) {
+                if (this.state.balance < amount) return false;
+                this.state.balance -= amount;
+                this.saveState();
+                return true;
+            }
+
+            addWin(amount) {
+                this.state.balance += amount;
+                this.saveState();
+            }
+
             openCase(caseId) {
                 const c = DB.cases.find(x => x.id === caseId);
                 if (this.state.balance < c.price) return { error: "Insufficient funds" };
@@ -321,17 +344,14 @@
                 let pool;
 
                 if (caseId === 'case_knife') {
-                    // 5% Win Rate
                     const profitItem = c.items[c.items.length - 1];
                     const trashItems = c.items.slice(0, c.items.length - 1);
                     if (roll < 0.05) { pool = [profitItem]; } else { pool = trashItems; }
                 } else if (caseId === 'case_high') {
-                    // 💀 BRUTAL EMBER ODDS 💀
                     if (roll < 0.99) pool = c.items.filter(i => i.rarity === 'restricted');
                     else if (roll < 0.999) pool = c.items.filter(i => i.rarity === 'covert');
                     else pool = c.items.filter(i => i.rarity === 'gold');
                 } else {
-                    // Standard Logic
                     let tier = 'consumer';
                     if (roll < 0.005) tier = 'gold';
                     else if (roll < 0.03) tier = 'classified';
@@ -366,10 +386,14 @@
                 
                 if (!targetItem) return { error: "Target invalid" };
 
+                // REMOVE SOURCE ITEM REGARDLESS OF OUTCOME
                 this.state.inventory.splice(idx, 1);
                 
-                let chance = (sourceItem.price / targetItem.price) * 0.8;
-                if (chance > 0.80) chance = 0.80;
+                // MATH: Pure value ratio * 0.9 (House Edge 10%)
+                let chance = (sourceItem.price / targetItem.price) * 0.9;
+                
+                // Cap chance
+                if (chance > 0.80) chance = 0.80; 
 
                 const isWin = Math.random() < chance;
                 if (isWin) {
@@ -395,10 +419,14 @@
             navigate: (page, params) => {
                 const app = document.getElementById('app-root');
                 app.innerHTML = '';
+                router.current = page;
                 if (page === 'home') pages.home(app);
                 else if (page === 'case') pages.case(app, params);
                 else if (page === 'inventory') pages.inventory(app);
                 else if (page === 'upgrader') pages.upgrader(app);
+                else if (page === 'minigames') pages.minigames(app);
+                else if (page === 'crash') pages.crash(app);
+                else if (page === 'mines') pages.mines(app);
                 lucide.createIcons();
             }
         };
@@ -416,7 +444,6 @@
                 if (!state.username) {
                     el.innerHTML = `<button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black font-bold px-6 py-2 rounded-lg transition">LOGIN</button>`;
                 } else {
-                    // ADDED WITHDRAW BUTTON
                     el.innerHTML = `
                         <div class="mr-4 text-right hidden sm:block"><div class="font-bold text-white">${state.username}</div></div>
                         <button onclick="ui.openWithdraw()" class="bg-emerald-600 hover:bg-emerald-500 text-white px-3 py-2 rounded-lg font-bold mr-2 text-sm transition">WITHDRAW</button>
@@ -466,6 +493,117 @@
                         `).join('')}
                     </div>
                 `;
+            },
+
+            minigames: (container) => {
+                container.innerHTML = `
+                    <div class="text-center mb-12">
+                        <h1 class="text-5xl font-black italic text-white mb-2">MINIGAMES</h1>
+                        <p class="text-slate-500 uppercase tracking-widest">High Risk, High Reward</p>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+                        <div onclick="router.navigate('crash')" class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-amber-500 cursor-pointer group transition relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="relative z-10 flex flex-col items-center">
+                                <i data-lucide="trending-up" class="w-24 h-24 text-red-500 mb-4 group-hover:scale-110 transition"></i>
+                                <h2 class="text-4xl font-black italic text-white">CRASH</h2>
+                                <p class="text-slate-400 mt-2">Cash out before it crashes.</p>
+                            </div>
+                        </div>
+                        <div onclick="router.navigate('mines')" class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-amber-500 cursor-pointer group transition relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                            <div class="relative z-10 flex flex-col items-center">
+                                <i data-lucide="bomb" class="w-24 h-24 text-emerald-500 mb-4 group-hover:scale-110 transition"></i>
+                                <h2 class="text-4xl font-black italic text-white">MINES</h2>
+                                <p class="text-slate-400 mt-2">Avoid the bombs, find the gems.</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            },
+
+            crash: (container) => {
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex items-center gap-4 mb-6">
+                            <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
+                            <h1 class="text-3xl font-black italic text-white">CRASH</h1>
+                        </div>
+                        
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[500px]">
+                            <div class="bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-col gap-4">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Bet Amount</label>
+                                    <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3 mt-1">
+                                        <span class="text-emerald-500 mr-2">$</span>
+                                        <input type="number" id="crash-bet" value="10" min="1" class="bg-transparent text-white font-bold w-full outline-none">
+                                    </div>
+                                    <div class="flex gap-2 mt-2">
+                                        <button onclick="document.getElementById('crash-bet').value /= 2" class="bg-zinc-800 text-xs px-2 py-1 rounded text-slate-400 hover:text-white">1/2</button>
+                                        <button onclick="document.getElementById('crash-bet').value *= 2" class="bg-zinc-800 text-xs px-2 py-1 rounded text-slate-400 hover:text-white">2x</button>
+                                        <button onclick="document.getElementById('crash-bet').value = server.state.balance" class="bg-zinc-800 text-xs px-2 py-1 rounded text-slate-400 hover:text-white">MAX</button>
+                                    </div>
+                                </div>
+                                <div class="mt-auto">
+                                    <button id="btn-crash-action" onclick="crashGame.action()" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black text-xl py-6 rounded-xl transition uppercase">PLACE BET</button>
+                                </div>
+                            </div>
+
+                            <div class="lg:col-span-2 bg-black rounded-xl border border-zinc-800 relative overflow-hidden flex flex-col">
+                                <div class="absolute inset-0 flex items-center justify-center z-10 pointer-events-none">
+                                    <div class="text-center">
+                                        <span id="crash-multiplier" class="text-7xl font-black text-white font-mono">1.00x</span>
+                                        <div id="crash-status" class="text-amber-500 font-bold uppercase tracking-widest mt-2 hidden">Current Payout</div>
+                                    </div>
+                                </div>
+                                <canvas id="crash-canvas" class="w-full h-full z-0"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                crashGame.init();
+            },
+
+            mines: (container) => {
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto">
+                        <div class="flex items-center gap-4 mb-6">
+                            <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
+                            <h1 class="text-3xl font-black italic text-white">MINES</h1>
+                        </div>
+
+                        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                            <div class="bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex flex-col gap-6">
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Bet Amount</label>
+                                    <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3 mt-1">
+                                        <span class="text-emerald-500 mr-2">$</span>
+                                        <input type="number" id="mines-bet" value="10" min="1" class="bg-transparent text-white font-bold w-full outline-none">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label class="text-xs font-bold text-slate-500 uppercase">Mines (1-24)</label>
+                                    <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3 mt-1">
+                                        <i data-lucide="bomb" class="w-4 h-4 text-red-500 mr-2"></i>
+                                        <input type="number" id="mines-count" value="3" min="1" max="24" class="bg-transparent text-white font-bold w-full outline-none">
+                                    </div>
+                                </div>
+                                <div class="bg-black/50 p-4 rounded-lg border border-zinc-800">
+                                    <div class="flex justify-between mb-1"><span class="text-slate-500 text-xs">Next Multiplier</span><span id="mines-next-mult" class="text-emerald-400 font-mono font-bold">1.00x</span></div>
+                                    <div class="flex justify-between"><span class="text-slate-500 text-xs">Total Profit</span><span id="mines-profit" class="text-amber-500 font-mono font-bold">$0.00</span></div>
+                                </div>
+                                <button id="btn-mines-start" onclick="minesGame.startGame()" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black text-xl py-4 rounded-xl transition uppercase mt-auto">START GAME</button>
+                                <button id="btn-mines-cashout" onclick="minesGame.cashout()" class="hidden w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl py-4 rounded-xl transition uppercase mt-auto">CASHOUT</button>
+                            </div>
+
+                            <div class="lg:col-span-2 bg-zinc-900 p-6 rounded-xl border border-zinc-800 flex items-center justify-center">
+                                <div id="mines-grid" class="grid grid-cols-5 gap-3 w-full max-w-[400px]">
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                minesGame.renderGrid();
             },
 
             case: (container, caseId) => {
@@ -569,7 +707,7 @@
                             <div class="wheel-container">
                                 <div class="wheel-spinner" id="wheel-spinner" style="--angle: 0deg"></div>
                                 <div class="wheel-inner">
-                                    <div class="wheel-arrow"></div> <span class="text-5xl font-black text-white tracking-tighter" id="win-chance">0%</span>
+                                    <div class="wheel-arrow"></div> <span class="text-4xl font-black text-white tracking-tighter" id="win-chance">0%</span>
                                 </div>
                             </div>
                             <button id="btn-upgrade" onclick="upgrader.roll()" class="w-48 bg-zinc-800 text-slate-600 font-black px-6 py-4 rounded-xl uppercase tracking-widest transition border border-zinc-800" disabled>ROLL</button>
@@ -600,7 +738,7 @@
             }
         };
 
-        // --- GAME LOGIC ---
+        // --- GAME LOGIC: CASES ---
         const game = {
             currentDrops: [],
             openCount: 1,
@@ -613,7 +751,6 @@
                     if(i === n) btn.className = "count-btn bg-amber-600 text-black px-4 py-2 rounded-lg font-bold transition";
                     else btn.className = "count-btn bg-zinc-800 text-slate-400 px-4 py-2 rounded-lg font-bold transition hover:text-white";
                 });
-                // Re-render strips based on count if NOT spinning
                 const area = document.getElementById('spinners-area');
                 if(area) {
                     area.innerHTML = '';
@@ -656,23 +793,20 @@
                 btn.disabled = true; err.innerText = "";
                 game.currentDrops = [];
 
-                // Perform Opens
                 for(let i=0; i<game.openCount; i++) {
                     const res = server.openCase(caseId);
                     if(res.success) game.currentDrops.push(res.item);
                 }
 
-                // If Fast Mode -> Instant
                 if(game.fastMode) {
                     document.getElementById('fast-overlay').classList.remove('hidden');
                     setTimeout(() => {
                         game.showResults();
                         document.getElementById('fast-overlay').classList.add('hidden');
                         btn.disabled = false;
-                        game.setCount(game.openCount); // Reset strips
+                        game.setCount(game.openCount);
                     }, 400);
                 } else {
-                    // MULTI-ANIMATION
                     game.currentDrops.forEach((result, index) => {
                         const strip = document.getElementById(`spinner-strip-${index}`);
                         if(!strip) return;
@@ -682,12 +816,10 @@
                         const offset = (landIndex * cardWidth) - (strip.parentElement.offsetWidth / 2) + (150/2);
                         const jitter = Math.floor(Math.random() * 50) - 25;
 
-                        // Plant Winner
                         const visItem = strip.children[landIndex];
                         visItem.innerHTML = `<div class="relative z-10 scale-110 drop-shadow-2xl">${DB.renderItem(result)}</div>`;
                         visItem.className = `w-[150px] h-[180px] flex-shrink-0 mx-1 bg-[#151515] border-b-4 rarity-${result.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] z-20 transform scale-105`;
 
-                        // Animate
                         strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
                         strip.style.transform = `translateX(-${offset + jitter}px)`;
                     });
@@ -695,7 +827,7 @@
                     setTimeout(() => {
                         game.showResults();
                         btn.disabled = false;
-                        game.setCount(game.openCount); // Reset strips
+                        game.setCount(game.openCount);
                     }, 4500);
                 }
             },
@@ -725,9 +857,11 @@
             }
         };
 
+        // --- GAME LOGIC: UPGRADER ---
         const upgrader = {
             source: null,
             target: null,
+            winChance: 0,
 
             openSourceSelector: () => {
                 const grid = document.getElementById('modal-source-grid');
@@ -779,11 +913,15 @@
                 }
 
                 if(upgrader.source && upgrader.target) {
-                    let chance = (upgrader.source.price / upgrader.target.price) * 0.8 * 100;
+                    let chance = (upgrader.source.price / upgrader.target.price) * 0.9 * 100;
                     if(chance > 80) chance = 80;
-                    if(chance < 1) chance = 1; 
                     
-                    document.getElementById('win-chance').innerText = chance.toFixed(1) + '%';
+                    // Allow really small chances
+                    upgrader.winChance = chance;
+                    
+                    const displayChance = chance < 0.01 ? "< 0.01%" : chance.toFixed(2) + '%';
+                    
+                    document.getElementById('win-chance').innerText = displayChance;
                     document.getElementById('wheel-spinner').style.setProperty('--angle', `${chance * 3.6}deg`);
                     
                     const btn = document.getElementById('btn-upgrade');
@@ -798,25 +936,355 @@
                 btn.disabled = true;
                 const spinner = document.getElementById('wheel-spinner');
                 
+                // RESET
                 spinner.style.transition = 'none';
                 spinner.style.transform = 'rotate(0deg)';
+
+                // PERFORM LOGIC
+                const res = server.upgrade(upgrader.source.uid, upgrader.target.name);
                 
                 setTimeout(() => {
                     spinner.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
-                    const rand = Math.floor(Math.random() * 360);
-                    spinner.style.transform = `rotate(${3600 + rand}deg)`;
+                    
+                    // CALCULATE ROTATION BASED ON RESULT TO PREVENT VISUAL BUGS
+                    // If Win: Land in the colored area (0 to angle)
+                    // If Loss: Land in the black area (angle to 360)
+                    
+                    const angleSize = upgrader.winChance * 3.6; // The size of the win slice in degrees
+                    let targetRotation = 3600; // Base spins
+
+                    if (res.win) {
+                        // Land somewhere between 5deg and (angleSize - 5deg) to be safe
+                        const safeBuffer = Math.min(5, angleSize / 2);
+                        const rand = Math.random() * (angleSize - (safeBuffer*2)) + safeBuffer;
+                        targetRotation += rand;
+                    } else {
+                        // Land somewhere between (angleSize + 5) and 355
+                        const safeBuffer = 5;
+                        const loseZone = 360 - angleSize - (safeBuffer*2);
+                        const rand = Math.random() * loseZone + angleSize + safeBuffer;
+                        targetRotation += rand;
+                    }
+
+                    spinner.style.transform = `rotate(-${targetRotation}deg)`; // Rotate counter clockwise so logic aligns with 0 at top
                     
                     setTimeout(() => {
-                        const res = server.upgrade(upgrader.source.uid, upgrader.target.name);
                         if(res.win) {
-                            alert("UPGRADE SUCCESS!");
+                            alert(`UPGRADE SUCCESS! You got ${res.item.name}`);
                         } else {
-                            alert("UPGRADE FAILED.");
+                            alert("UPGRADE FAILED. Item lost.");
                         }
                         upgrader.source = null; upgrader.target = null;
                         router.navigate('upgrader');
                     }, 4100);
                 }, 50);
+            }
+        };
+
+        // --- GAME LOGIC: CRASH ---
+        const crashGame = {
+            running: false,
+            multiplier: 1.00,
+            crashPoint: 0,
+            bet: 0,
+            cashedOut: false,
+            canvas: null,
+            ctx: null,
+            animationId: null,
+
+            init: () => {
+                const canvas = document.getElementById('crash-canvas');
+                canvas.width = canvas.parentElement.offsetWidth;
+                canvas.height = canvas.parentElement.offsetHeight;
+                crashGame.canvas = canvas;
+                crashGame.ctx = canvas.getContext('2d');
+                crashGame.reset();
+            },
+
+            reset: () => {
+                crashGame.running = false;
+                crashGame.multiplier = 1.00;
+                crashGame.cashedOut = false;
+                document.getElementById('crash-multiplier').innerText = "1.00x";
+                document.getElementById('crash-multiplier').classList.remove('text-red-500', 'text-emerald-500');
+                document.getElementById('crash-multiplier').classList.add('text-white');
+                document.getElementById('btn-crash-action').innerText = "PLACE BET";
+                document.getElementById('btn-crash-action').className = "w-full bg-amber-600 hover:bg-amber-500 text-black font-black text-xl py-6 rounded-xl transition uppercase";
+                document.getElementById('btn-crash-action').disabled = false;
+                crashGame.drawGraph(0);
+            },
+
+            action: () => {
+                if (!crashGame.running) {
+                    // START
+                    const betInput = document.getElementById('crash-bet');
+                    const amount = parseFloat(betInput.value);
+                    if (isNaN(amount) || amount <= 0) return alert("Invalid bet");
+                    
+                    if(server.processBet(amount)) {
+                        crashGame.bet = amount;
+                        crashGame.startGame();
+                    } else {
+                        alert("Insufficient Funds");
+                    }
+                } else {
+                    // CASHOUT
+                    crashGame.doCashout();
+                }
+            },
+
+            startGame: () => {
+                crashGame.running = true;
+                crashGame.crashPoint = crashGame.getCrashPoint();
+                document.getElementById('btn-crash-action').innerText = "CASHOUT";
+                document.getElementById('btn-crash-action').className = "w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black text-xl py-6 rounded-xl transition uppercase";
+                
+                let startTime = Date.now();
+                
+                const loop = () => {
+                    if (!crashGame.running || router.current !== 'crash') return;
+                    
+                    const elapsed = (Date.now() - startTime) / 1000;
+                    // Simple exponential growth formula
+                    crashGame.multiplier = 1 + (0.06 * elapsed) + Math.pow(elapsed, 2) * 0.04; 
+
+                    document.getElementById('crash-multiplier').innerText = crashGame.multiplier.toFixed(2) + 'x';
+                    
+                    if (!crashGame.cashedOut) {
+                         const currentWin = (crashGame.bet * crashGame.multiplier).toFixed(2);
+                         document.getElementById('crash-status').innerText = `PAYOUT: $${currentWin}`;
+                         document.getElementById('crash-status').classList.remove('hidden');
+                    }
+
+                    if (crashGame.multiplier >= crashGame.crashPoint) {
+                        crashGame.bust();
+                    } else {
+                        crashGame.drawGraph(elapsed);
+                        requestAnimationFrame(loop);
+                    }
+                };
+                requestAnimationFrame(loop);
+            },
+
+            doCashout: () => {
+                if(!crashGame.running || crashGame.cashedOut) return;
+                crashGame.cashedOut = true;
+                const win = crashGame.bet * crashGame.multiplier;
+                server.addWin(win);
+                document.getElementById('btn-crash-action').innerText = "CASHED OUT";
+                document.getElementById('btn-crash-action').disabled = true;
+                document.getElementById('crash-multiplier').classList.add('text-emerald-500');
+                document.getElementById('crash-status').innerText = `WON $${win.toFixed(2)}`;
+            },
+
+            bust: () => {
+                crashGame.running = false;
+                document.getElementById('crash-multiplier').innerText = `CRASHED @ ${crashGame.multiplier.toFixed(2)}x`;
+                document.getElementById('crash-multiplier').classList.remove('text-white');
+                document.getElementById('crash-multiplier').classList.add('text-red-500');
+                document.getElementById('crash-status').classList.add('hidden');
+                
+                if (!crashGame.cashedOut) {
+                    document.getElementById('btn-crash-action').innerText = "BUSTED";
+                    document.getElementById('btn-crash-action').className = "w-full bg-red-600 text-white font-black text-xl py-6 rounded-xl transition uppercase cursor-not-allowed";
+                }
+                
+                setTimeout(() => {
+                    crashGame.reset();
+                }, 3000);
+            },
+
+            getCrashPoint: () => {
+                // E = 0.99 / (1 - U)
+                // 1% Instant crash house edge
+                if (Math.random() < 0.03) return 1.00; // Increased instant crash for "Tuti" feel
+                const r = Math.random();
+                const crash = 0.99 / (1 - r);
+                return Math.max(1.00, Math.min(crash, 10000));
+            },
+
+            drawGraph: (progress) => {
+                const ctx = crashGame.ctx;
+                const cvs = crashGame.canvas;
+                ctx.clearRect(0, 0, cvs.width, cvs.height);
+
+                ctx.beginPath();
+                ctx.strokeStyle = '#f59e0b'; // Amber
+                ctx.lineWidth = 4;
+                ctx.lineCap = 'round';
+
+                // Map time/mult to canvas coords
+                // Simple Bezier curve aesthetic
+                const startX = 0;
+                const startY = cvs.height;
+                
+                // Dynamic scaling
+                const scaleX = cvs.width / (progress + 2); 
+                const scaleY = cvs.height / (crashGame.multiplier + 0.5);
+
+                ctx.moveTo(startX, startY);
+                
+                // Draw curve
+                // For simplicity in this demo, drawing a quadratic curve based on progress
+                let x = Math.min(cvs.width, progress * 50); 
+                let y = cvs.height - (Math.min(cvs.height, (crashGame.multiplier - 1) * 100));
+                
+                // Better visual:
+                ctx.quadraticCurveTo(x/2, cvs.height, x, y);
+                ctx.stroke();
+
+                // Gradient fill
+                ctx.lineTo(x, cvs.height);
+                ctx.lineTo(0, cvs.height);
+                ctx.fillStyle = 'rgba(245, 158, 11, 0.1)';
+                ctx.fill();
+            }
+        };
+
+        // --- GAME LOGIC: MINES ---
+        const minesGame = {
+            active: false,
+            bet: 0,
+            minesCount: 3,
+            grid: [], // 0 = safe, 1 = mine
+            revealed: [],
+            currentMult: 1.00,
+
+            renderGrid: () => {
+                const container = document.getElementById('mines-grid');
+                container.innerHTML = '';
+                for(let i=0; i<25; i++) {
+                    const btn = document.createElement('button');
+                    btn.className = "mine-tile w-full h-16 bg-zinc-800 rounded-lg border-b-4 border-zinc-700 flex items-center justify-center text-2xl relative overflow-hidden";
+                    btn.id = `mine-${i}`;
+                    btn.onclick = () => minesGame.clickTile(i);
+                    container.appendChild(btn);
+                }
+            },
+
+            startGame: () => {
+                if(minesGame.active) return;
+                
+                const betInput = document.getElementById('mines-bet');
+                const minesInput = document.getElementById('mines-count');
+                const amount = parseFloat(betInput.value);
+                const count = parseInt(minesInput.value);
+
+                if(isNaN(amount) || amount <= 0) return alert("Invalid bet");
+                if(isNaN(count) || count < 1 || count > 24) return alert("Invalid mines (1-24)");
+
+                if(server.processBet(amount)) {
+                    minesGame.bet = amount;
+                    minesGame.minesCount = count;
+                    minesGame.active = true;
+                    minesGame.revealed = Array(25).fill(false);
+                    minesGame.currentMult = 1.00;
+                    
+                    // Generate Grid
+                    minesGame.grid = Array(25).fill(0);
+                    let placed = 0;
+                    while(placed < count) {
+                        const idx = Math.floor(Math.random() * 25);
+                        if(minesGame.grid[idx] === 0) {
+                            minesGame.grid[idx] = 1;
+                            placed++;
+                        }
+                    }
+
+                    // UI Updates
+                    minesGame.renderGrid(); // Reset Visuals
+                    document.getElementById('btn-mines-start').classList.add('hidden');
+                    document.getElementById('btn-mines-cashout').classList.remove('hidden');
+                    document.getElementById('btn-mines-cashout').innerText = "CASHOUT $0.00";
+                    minesGame.updateStats();
+                } else {
+                    alert("Insufficient Funds");
+                }
+            },
+
+            clickTile: (idx) => {
+                if(!minesGame.active || minesGame.revealed[idx]) return;
+
+                const tile = document.getElementById(`mine-${idx}`);
+                
+                if(minesGame.grid[idx] === 1) {
+                    // BOOM
+                    tile.classList.add('bg-red-500', 'border-red-700');
+                    tile.innerHTML = '<i data-lucide="bomb" class="text-white animate-bounce"></i>';
+                    minesGame.gameOver(false);
+                } else {
+                    // SAFE
+                    minesGame.revealed[idx] = true;
+                    tile.classList.add('bg-zinc-700', 'border-zinc-600', 'revealed');
+                    tile.innerHTML = '<i data-lucide="gem" class="text-emerald-400 pop-in"></i>';
+                    
+                    // Calculate Multiplier
+                    // Formula: current * (total_remaining / safe_remaining)
+                    const totalTiles = 25;
+                    const safeTiles = 25 - minesGame.minesCount;
+                    const revealedCount = minesGame.revealed.filter(Boolean).length;
+                    
+                    // Standard Mines Math
+                    // Comb(25, mines) / Comb(25-revealed, mines)
+                    // Simplified iterative multiplier:
+                    const remainingTotal = 25 - (revealedCount - 1);
+                    const remainingSafe = safeTiles - (revealedCount - 1);
+                    const stepMult = remainingTotal / remainingSafe;
+                    
+                    minesGame.currentMult *= stepMult;
+                    // House Edge Adjustment (1%)
+                    minesGame.currentMult *= 0.99;
+
+                    if(revealedCount === safeTiles) {
+                        minesGame.cashout(); // Auto win all
+                    } else {
+                        minesGame.updateStats();
+                    }
+                }
+                lucide.createIcons();
+            },
+
+            updateStats: () => {
+                const profit = (minesGame.bet * minesGame.currentMult) - minesGame.bet;
+                const total = minesGame.bet * minesGame.currentMult;
+                
+                document.getElementById('mines-profit').innerText = ui.formatMoney(profit > 0 ? profit : 0);
+                document.getElementById('btn-mines-cashout').innerText = `CASHOUT ${ui.formatMoney(total)}`;
+                
+                // Calc Next Mult
+                const revealedCount = minesGame.revealed.filter(Boolean).length;
+                const remainingTotal = 25 - revealedCount;
+                const remainingSafe = (25 - minesGame.minesCount) - revealedCount;
+                const nextStep = (remainingTotal / remainingSafe) * 0.99;
+                
+                document.getElementById('mines-next-mult').innerText = (minesGame.currentMult * nextStep).toFixed(2) + 'x';
+            },
+
+            cashout: () => {
+                if(!minesGame.active) return;
+                const win = minesGame.bet * minesGame.currentMult;
+                server.addWin(win);
+                minesGame.gameOver(true);
+            },
+
+            gameOver: (win) => {
+                minesGame.active = false;
+                // Reveal All
+                minesGame.grid.forEach((isMine, i) => {
+                    const tile = document.getElementById(`mine-${i}`);
+                    if(isMine) {
+                        tile.innerHTML = '<i data-lucide="bomb" class="text-white/50"></i>';
+                        if(!win) tile.classList.add('bg-red-900/50');
+                    } else if(!minesGame.revealed[i]) {
+                        tile.classList.add('opacity-50');
+                    }
+                });
+
+                document.getElementById('btn-mines-start').classList.remove('hidden');
+                document.getElementById('btn-mines-cashout').classList.add('hidden');
+                lucide.createIcons();
+                
+                if(win) alert(`You won ${ui.formatMoney(minesGame.bet * minesGame.currentMult)}!`);
             }
         };
 
