@@ -54,7 +54,7 @@
             box-shadow: inset 0 0 60px rgba(0,0,0,1);
         }
         .spinner-overlay-left, .spinner-overlay-right {
-            position: absolute; top: 0; bottom: 0; width: 150px; z-index: 5; pointer-events: none;
+            position: absolute; top: 0; bottom: 0; width: 100px; z-index: 5; pointer-events: none;
         }
         .spinner-overlay-left { left: 0; background: linear-gradient(to right, #050505 0%, transparent 100%); }
         .spinner-overlay-right { right: 0; background: linear-gradient(to left, #050505 0%, transparent 100%); }
@@ -64,11 +64,16 @@
         }
         .items-strip { display: flex; height: 100%; align-items: center; will-change: transform; }
 
+        /* Battle Spinner specific */
+        .battle-spinner { height: 140px; border: 1px solid #222; }
+        .battle-spinner .w-\[150px\] { width: 110px; }
+        .battle-spinner .h-\[180px\] { height: 120px; }
+
         /* Items */
         .weapon-img { filter: drop-shadow(0 10px 15px rgba(0,0,0,0.8)); transition: transform 0.3s ease; }
         .item-card-base:hover .weapon-img { transform: scale(1.1) rotate(-2deg); }
 
-        /* UPGRADER & JACKPOT WHEEL */
+        /* JACKPOT WHEEL */
         .wheel-container {
             position: relative;
             width: 300px;
@@ -126,6 +131,19 @@
         .mine-tile:hover { background-color: #27272a; }
         .mine-tile.revealed { cursor: default; }
 
+        /* BLACKJACK */
+        .playing-card {
+            width: 80px; height: 112px; background: white; border-radius: 6px;
+            display: flex; flex-direction: column; justify-content: space-between; padding: 4px;
+            font-weight: bold; position: relative; box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            animation: dealCard 0.4s ease-out forwards;
+            opacity: 0; transform: translateY(-20px) scale(0.8);
+        }
+        @keyframes dealCard { to { opacity: 1; transform: translateY(0) scale(1); } }
+        .suit-red { color: #ef4444; } .suit-black { color: #1e293b; }
+        .card-center { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); font-size: 2rem; }
+
         /* Rarity Colors */
         .rarity-consumer { border-color: #747474; --glow: #747474; }
         .rarity-mil-spec { border-color: #2b60b5; --glow: #2b60b5; }
@@ -133,11 +151,6 @@
         .rarity-classified { border-color: #b026c4; --glow: #b026c4; }
         .rarity-covert { border-color: #cc2323; --glow: #cc2323; }
         .rarity-gold { border-color: #e8b80e; --glow: #e8b80e; }
-
-        /* Roulette Colors */
-        .roul-red { background-color: #ef4444; color: white; }
-        .roul-black { background-color: #27272a; color: #94a3b8; }
-        .roul-green { background-color: #10b981; color: white; }
 
         .glow-text { text-shadow: 0 0 10px var(--glow); color: var(--glow); }
         .pop-in { animation: popIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
@@ -180,23 +193,51 @@
 
     <div id="login-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative">
-            <h2 class="text-3xl font-bold brand-font mb-2">Login</h2>
+            <h2 class="text-3xl font-bold brand-font mb-2 text-white">Login</h2>
             <form onsubmit="auth.login(event)">
                 <div class="space-y-4">
-                    <input type="text" id="login-user" maxlength="15" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
-                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-wider py-4 rounded-lg transition mt-2">Start</button>
+                    <input type="text" id="login-user" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
+                    <input type="password" id="login-pass" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Password" required>
+                    <button type="submit" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black uppercase tracking-wider py-4 rounded-lg transition mt-2">Login</button>
                 </div>
             </form>
+            <div class="mt-4 text-center">
+                <span class="text-slate-500 text-sm">No account? </span>
+                <button onclick="ui.closeModal('login-modal'); ui.openModal('register-modal')" class="text-amber-500 font-bold hover:underline text-sm">Register</button>
+            </div>
             <button onclick="ui.closeModal('login-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
+        </div>
+    </div>
+
+    <div id="register-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
+        <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative">
+            <h2 class="text-3xl font-bold brand-font mb-2 text-white">Create Account</h2>
+            <form onsubmit="auth.register(event)">
+                <div class="space-y-4">
+                    <input type="email" id="reg-email" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Email" required>
+                    <input type="text" id="reg-user" maxlength="15" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Username" required>
+                    <input type="password" id="reg-pass" class="w-full bg-black border border-zinc-700 rounded-lg p-4 focus:border-amber-500 outline-none text-white font-bold" placeholder="Password" required>
+                    <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider py-4 rounded-lg transition mt-2">Register</button>
+                </div>
+            </form>
+            <div class="mt-4 text-center">
+                <span class="text-slate-500 text-sm">Have an account? </span>
+                <button onclick="ui.closeModal('register-modal'); ui.openModal('login-modal')" class="text-amber-500 font-bold hover:underline text-sm">Login</button>
+            </div>
+            <button onclick="ui.closeModal('register-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
         </div>
     </div>
 
     <div id="deposit-modal" class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/95 backdrop-blur-sm">
         <div class="bg-zinc-900 p-8 rounded-2xl border border-zinc-800 w-full max-w-md shadow-2xl pop-in relative">
-            <h2 class="text-3xl font-bold brand-font mb-2 text-white">DEPOSIT</h2>
-            <p class="text-slate-500 mb-6 text-sm">Roleplay Credit Card (Luhn Validated)</p>
+            <h2 class="text-3xl font-bold brand-font mb-4 text-white">DEPOSIT</h2>
             
-            <div class="space-y-4">
+            <div class="flex gap-2 mb-6 p-1 bg-black rounded-lg">
+                <button onclick="ui.setDepositTab('card')" id="tab-card" class="flex-1 py-2 rounded text-sm font-bold bg-zinc-800 text-white transition">Card</button>
+                <button onclick="ui.setDepositTab('pix')" id="tab-pix" class="flex-1 py-2 rounded text-sm font-bold text-slate-500 hover:text-white transition">Pix</button>
+            </div>
+
+            <div id="view-card" class="space-y-4">
                 <div>
                     <label class="text-xs text-slate-400 uppercase font-bold">Amount</label>
                     <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3 mt-1">
@@ -205,7 +246,7 @@
                     </div>
                 </div>
                 <div>
-                    <label class="text-xs text-slate-400 uppercase font-bold">Card Number</label>
+                    <label class="text-xs text-slate-400 uppercase font-bold">Card Number (Roleplay)</label>
                     <input type="text" id="dep-cc" placeholder="0000 0000 0000 0000" maxlength="19" class="w-full bg-black border border-zinc-700 rounded-lg p-3 mt-1 text-white font-mono">
                 </div>
                 <div class="flex gap-4">
@@ -218,9 +259,30 @@
                         <input type="text" placeholder="123" maxlength="3" class="w-full bg-black border border-zinc-700 rounded-lg p-3 mt-1 text-white font-mono">
                     </div>
                 </div>
+                <button onclick="server.processDeposit()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider py-4 rounded-lg transition mt-6">PAY NOW</button>
             </div>
 
-            <button onclick="server.processDeposit()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider py-4 rounded-lg transition mt-6">PAY NOW</button>
+            <div id="view-pix" class="space-y-4 hidden">
+                <div id="pix-input-step">
+                    <label class="text-xs text-slate-400 uppercase font-bold">Amount</label>
+                    <div class="flex items-center bg-black border border-zinc-700 rounded-lg px-4 py-3 mt-1">
+                        <span class="text-emerald-500 mr-2">$</span>
+                        <input type="number" id="pix-amount" value="50" class="bg-transparent text-white font-bold w-full outline-none">
+                    </div>
+                    <button onclick="server.generatePix()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black uppercase tracking-wider py-4 rounded-lg transition mt-6">GENERATE QR CODE</button>
+                </div>
+                <div id="pix-qr-step" class="hidden text-center">
+                    <div class="bg-white p-4 rounded-lg inline-block mb-4 mx-auto">
+                        <img id="pix-qr-img" src="" class="w-48 h-48 mx-auto" alt="QR Code">
+                    </div>
+                    <p class="text-sm text-slate-400 mb-2">Scan or Copy Code</p>
+                    <div class="bg-black p-3 rounded border border-zinc-700 font-mono text-xs text-slate-300 break-all mb-4 cursor-pointer hover:text-white" onclick="alert('Copied to clipboard!')">
+                        00020126360014BR.GOV.BCB.PIX0114+551199999999520400005303986540510.005802BR5913FLASHCASES6008SAOPAULO62070503***6304E2CA
+                    </div>
+                    <button onclick="server.confirmPix()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3 rounded-lg transition" id="btn-pix-confirm">I HAVE PAID</button>
+                </div>
+            </div>
+
             <button onclick="ui.closeModal('deposit-modal')" class="absolute top-4 right-4 text-slate-500 hover:text-white"><i data-lucide="x"></i></button>
         </div>
     </div>
@@ -263,7 +325,6 @@
         const Utils = {
             luhnCheck: (val) => {
                 if (!val) return false;
-                // Remove spaces
                 val = val.replace(/\s+/g, '');
                 if (/[^0-9]/.test(val) || val.length < 13) return false;
                 let checksum = 0;
@@ -287,17 +348,16 @@
             awp: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f",
             m4a4: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f",
             glock: "https://community.cloudflare.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRv3n2NO8mk9kLQtEv7W2e1Q016HJJ25B5925k4bbx_TzPL_Ul2hU-sR00-2UpN6h2wft-RVqZzvyJ9CTIQFqYV2D_FDrw-bvg5XtuJ_In3Fk7yRz7H3YnUO2h00ZcKUx0hWfP9cO/360fx360f",
-            
-            // Knives
             k1: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf3qr3czxb49KzgL-Kmsj2P7rSnXtU6dd9teTA5475jV2urhcDPzCkfMKLcAE-aV3R-lO5l-e61sfqvZ2fyiBgvikqsXiMyRGw1U1Ja-dm06adSULeWfJvEZCxug/144x",
             k2: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf3qr3czxb49KzgL-KlsjyMr_UqWdY781lxLnFoNygiwfnqUNla2ihJ4XGclNqZ17U_Vm7yO7v1MPpu5mYzHBr6CI8pSGKferYZ_4/144x",
             k3: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJf1f_BYQJD4eOym5Cbm_LmDKvZl3hUufp9g-7J4cKti1Hm8xJkZ22lcNKSIwE6NQnUr1S7xLu5hZ676MiYnXtmuSBx537bgVXp1gHAfnds/144x",
             k4: "https://steamcommunity-a.akamaihd.net/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXH5ApeO4YmlhxYQknCRvCo04DEVlxkKgpovbSsLQJfw-bbeQJD4eO7lZKAkvPLJqvuzztu5Mx2gv2P99jz0AGyrUJoYW70IoWdIQ5sYV_Zrge-w-nr1pG8vZTBziRk7yJwsWGdwUJxuOAg0g/144x",
-
-            // Cases
             caseLow: "https://media.csgo-skins.com/container/low-case.png",
             caseHigh: "https://media.csgo-skins.com/container/ember-case.png",
-            caseKnife: "https://media.csgo-skins.com/container/knife-case.png?v2"
+            caseKnife: "https://media.csgo-skins.com/container/knife-case.png?v2",
+            caseRoyal: "https://media.csgo-skins.com/container/royal-case.png",
+            caseAmethyst: "https://media.csgo-skins.com/container/amethyst-case.png?v3",
+            caseGemstone: "https://media.csgo-skins.com/container/gemstone-case.png?v4"
         };
 
         const DB = {
@@ -334,6 +394,33 @@
                         { name: 'Butterfly | Stained', rarity: 'gold', price: 800.00, img: ASSETS.k3, filter: 'brightness(1.1)' },
                         { name: 'Karambit | SAPPHIRE', rarity: 'gold', price: 5000.00, img: ASSETS.k1, filter: 'hue-rotate(220deg) saturate(300%) contrast(1.2)' }
                     ]
+                },
+                {
+                    id: 'case_royal', name: 'Royal Case', price: 120.00, image: ASSETS.caseRoyal, color: 'border-yellow-400',
+                    items: [
+                        { name: 'M4 | Royal Blue', rarity: 'restricted', price: 20.00, img: ASSETS.m4a4, filter: 'hue-rotate(200deg)' },
+                        { name: 'AK-47 | Gold Arab', rarity: 'covert', price: 500.00, img: ASSETS.ak47, filter: 'sepia(100%) saturate(300%)' },
+                        { name: 'AWP | Prince', rarity: 'covert', price: 1200.00, img: ASSETS.awp, filter: 'hue-rotate(45deg) saturate(150%)' },
+                        { name: 'Karambit | Lore', rarity: 'gold', price: 1800.00, img: ASSETS.k1, filter: 'sepia(100%)' }
+                    ]
+                },
+                {
+                    id: 'case_amethyst', name: 'Amethyst Case', price: 35.00, image: ASSETS.caseAmethyst, color: 'border-purple-500',
+                    items: [
+                        { name: 'Glock | Violet', rarity: 'mil-spec', price: 5.00, img: ASSETS.glock, filter: 'hue-rotate(280deg)' },
+                        { name: 'SSG | Acid Fade', rarity: 'restricted', price: 12.00, img: ASSETS.ssg, filter: 'hue-rotate(250deg)' },
+                        { name: 'M9 | Ultraviolet', rarity: 'gold', price: 400.00, img: ASSETS.k2, filter: 'hue-rotate(260deg) brightness(0.6)' },
+                        { name: 'Pandora | Gloves', rarity: 'gold', price: 3000.00, img: ASSETS.k3, filter: 'hue-rotate(240deg)' }
+                    ]
+                },
+                {
+                    id: 'case_gem', name: 'Gemstone Case', price: 250.00, image: ASSETS.caseGemstone, color: 'border-emerald-400',
+                    items: [
+                        { name: 'Emerald | Pinstripe', rarity: 'restricted', price: 40.00, img: ASSETS.ak47, filter: 'hue-rotate(90deg)' },
+                        { name: 'Ruby | Poison', rarity: 'classified', price: 150.00, img: ASSETS.ssg, filter: 'hue-rotate(330deg)' },
+                        { name: 'Sapphire | Lens', rarity: 'covert', price: 400.00, img: ASSETS.awp, filter: 'hue-rotate(200deg)' },
+                        { name: 'Karambit | EMERALD', rarity: 'gold', price: 6000.00, img: ASSETS.k1, filter: 'hue-rotate(120deg) saturate(200%)' }
+                    ]
                 }
             ],
             renderItem: (item, sizeClass = "w-32 h-24") => {
@@ -348,7 +435,9 @@
         class ServerController {
             constructor() {
                 this.storageKey = 'flash_cases_tuti_extended';
+                this.usersKey = 'flash_cases_users';
                 this.state = this.loadState();
+                this.users = this.loadUsers();
             }
 
             loadState() {
@@ -356,9 +445,31 @@
                 return saved ? JSON.parse(saved) : { username: null, balance: 50.00, inventory: [], xp: 0 };
             }
 
+            loadUsers() {
+                const saved = localStorage.getItem(this.usersKey);
+                return saved ? JSON.parse(saved) : {};
+            }
+
             saveState() { localStorage.setItem(this.storageKey, JSON.stringify(this.state)); this.notifyListeners(); }
+            saveUsers() { localStorage.setItem(this.usersKey, JSON.stringify(this.users)); }
             
-            login(username) { this.state.username = username; this.saveState(); }
+            // Authentication
+            register(email, username, password) {
+                if(this.users[username]) return { success: false, message: "Username taken" };
+                this.users[username] = { email, password, createdAt: Date.now() };
+                this.saveUsers();
+                return { success: true };
+            }
+
+            login(username, password) {
+                const user = this.users[username];
+                if(user && user.password === password) {
+                    this.state.username = username;
+                    this.saveState();
+                    return { success: true };
+                }
+                return { success: false, message: "Invalid credentials" };
+            }
             
             logout() { 
                 this.state.username = null; this.state.balance = 50.00; this.state.inventory = []; 
@@ -380,20 +491,45 @@
                 const cc = document.getElementById('dep-cc').value;
                 const amount = parseFloat(document.getElementById('dep-amount').value);
                 
-                if(!Utils.luhnCheck(cc)) {
-                    alert("Transaction Failed: Invalid Card Number (Luhn Check Failed)");
-                    return;
-                }
-                
-                if(isNaN(amount) || amount <= 0) {
-                    alert("Invalid Amount");
-                    return;
-                }
+                if(!Utils.luhnCheck(cc)) { alert("Transaction Failed: Invalid Card Number (Luhn Check Failed)"); return; }
+                if(isNaN(amount) || amount <= 0) { alert("Invalid Amount"); return; }
 
-                this.state.balance += amount;
-                this.saveState();
+                this.addFunds(amount);
                 alert(`Successfully deposited $${amount.toFixed(2)}!`);
                 ui.closeModal('deposit-modal');
+            }
+
+            generatePix() {
+                const amount = parseFloat(document.getElementById('pix-amount').value);
+                if(isNaN(amount) || amount <= 0) { alert("Invalid Amount"); return; }
+                
+                document.getElementById('pix-input-step').classList.add('hidden');
+                document.getElementById('pix-qr-step').classList.remove('hidden');
+                // Fake QR code generation using a placeholder API with a random string to force refresh
+                document.getElementById('pix-qr-img').src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=FLASHCASES_FAKE_PIX_${Date.now()}`;
+            }
+
+            confirmPix() {
+                const btn = document.getElementById('btn-pix-confirm');
+                btn.disabled = true;
+                btn.innerText = "VERIFYING...";
+                
+                setTimeout(() => {
+                    const amount = parseFloat(document.getElementById('pix-amount').value);
+                    this.addFunds(amount);
+                    alert(`Pix confirmed! $${amount.toFixed(2)} added.`);
+                    ui.closeModal('deposit-modal');
+                    // Reset modal state
+                    btn.disabled = false;
+                    btn.innerText = "I HAVE PAID";
+                    document.getElementById('pix-input-step').classList.remove('hidden');
+                    document.getElementById('pix-qr-step').classList.add('hidden');
+                }, 2000);
+            }
+
+            addFunds(amount) {
+                this.state.balance += amount;
+                this.saveState();
             }
 
             processBet(amount) {
@@ -408,11 +544,9 @@
                 this.saveState();
             }
 
-            openCase(caseId) {
+            // Logic for opening a single case logic
+            calculateCaseDrop(caseId) {
                 const c = DB.cases.find(x => x.id === caseId);
-                if (this.state.balance < c.price) return { error: "Insufficient funds" };
-                this.state.balance -= c.price;
-
                 const roll = Math.random();
                 let pool;
 
@@ -433,8 +567,15 @@
                     pool = c.items.filter(i => i.rarity === tier);
                     if(!pool.length) pool = c.items;
                 }
-
                 const item = { ...pool[Math.floor(Math.random() * pool.length)], uid: Date.now() + Math.random().toString() };
+                return item;
+            }
+
+            openCase(caseId) {
+                const c = DB.cases.find(x => x.id === caseId);
+                if (this.state.balance < c.price) return { error: "Insufficient funds" };
+                this.state.balance -= c.price;
+                const item = this.calculateCaseDrop(caseId);
                 this.state.inventory.push(item);
                 this.saveState();
                 return { success: true, item: item };
@@ -496,8 +637,9 @@
                 else if (page === 'minigames') pages.minigames(app);
                 else if (page === 'crash') pages.crash(app);
                 else if (page === 'mines') pages.mines(app);
-                else if (page === 'roulette') pages.roulette(app);
+                else if (page === 'blackjack') pages.blackjack(app);
                 else if (page === 'jackpot') pages.jackpot(app);
+                else if (page === 'casebattle') pages.casebattle(app);
                 lucide.createIcons();
             }
         };
@@ -512,11 +654,33 @@
             },
             openDeposit: () => {
                 ui.openModal('deposit-modal');
+                ui.setDepositTab('card');
+            },
+            setDepositTab: (tab) => {
+                document.getElementById('view-card').classList.add('hidden');
+                document.getElementById('view-pix').classList.add('hidden');
+                document.getElementById('tab-card').classList.replace('bg-zinc-800', 'text-slate-500');
+                document.getElementById('tab-card').classList.remove('text-white');
+                document.getElementById('tab-pix').classList.replace('bg-zinc-800', 'text-slate-500');
+                document.getElementById('tab-pix').classList.remove('text-white');
+                
+                if(tab === 'card') {
+                    document.getElementById('view-card').classList.remove('hidden');
+                    document.getElementById('tab-card').classList.add('bg-zinc-800', 'text-white');
+                    document.getElementById('tab-card').classList.remove('text-slate-500');
+                } else {
+                    document.getElementById('view-pix').classList.remove('hidden');
+                    document.getElementById('tab-pix').classList.add('bg-zinc-800', 'text-white');
+                    document.getElementById('tab-pix').classList.remove('text-slate-500');
+                }
             },
             renderNav: (state) => {
                 const el = document.getElementById('auth-section');
                 if (!state.username) {
-                    el.innerHTML = `<button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black font-bold px-6 py-2 rounded-lg transition">LOGIN</button>`;
+                    el.innerHTML = `
+                        <button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black font-bold px-6 py-2 rounded-lg transition mr-2">LOGIN</button>
+                        <button onclick="ui.openModal('register-modal')" class="bg-zinc-800 hover:bg-zinc-700 text-white font-bold px-6 py-2 rounded-lg transition">REGISTER</button>
+                    `;
                 } else {
                     el.innerHTML = `
                         <div class="mr-4 text-right hidden sm:block"><div class="font-bold text-white">${state.username}</div></div>
@@ -533,8 +697,25 @@
         const auth = {
             login: (e) => {
                 e.preventDefault();
-                server.login(document.getElementById('login-user').value);
-                ui.closeModal('login-modal');
+                const u = document.getElementById('login-user').value;
+                const p = document.getElementById('login-pass').value;
+                const res = server.login(u, p);
+                if(res.success) ui.closeModal('login-modal');
+                else alert(res.message);
+            },
+            register: (e) => {
+                e.preventDefault();
+                const email = document.getElementById('reg-email').value;
+                const u = document.getElementById('reg-user').value;
+                const p = document.getElementById('reg-pass').value;
+                const res = server.register(email, u, p);
+                if(res.success) {
+                    alert("Registration successful! Please login.");
+                    ui.closeModal('register-modal');
+                    ui.openModal('login-modal');
+                } else {
+                    alert(res.message);
+                }
             }
         };
 
@@ -548,7 +729,10 @@
                             <h1 class="text-7xl font-black mb-4 text-white">FLASH<span class="text-amber-500">CASES</span></h1>
                             <p class="text-3xl text-amber-500 mb-8 font-black italic uppercase">"Tuti will not have the 100k"</p>
                             <p class="text-slate-500 mb-8">Start with $50. No refills. 90% Loss rate on Knife Cases.</p>
-                            <button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black text-xl font-bold px-12 py-5 rounded-xl transition flex items-center gap-3"><i data-lucide="play"></i> START RUN</button>
+                            <div class="flex gap-4">
+                                <button onclick="ui.openModal('login-modal')" class="bg-amber-600 hover:bg-amber-500 text-black text-xl font-bold px-12 py-5 rounded-xl transition flex items-center gap-3"><i data-lucide="play"></i> LOGIN</button>
+                                <button onclick="ui.openModal('register-modal')" class="bg-zinc-800 hover:bg-zinc-700 text-white text-xl font-bold px-12 py-5 rounded-xl transition flex items-center gap-3">REGISTER</button>
+                            </div>
                         </div>`;
                     return;
                 }
@@ -572,9 +756,10 @@
 
             minigames: (container) => {
                 const games = [
+                    { id: 'casebattle', name: 'Case Battle', color: 'text-blue-500', icon: 'swords', desc: '1v1 Case Opening Battles.' },
                     { id: 'crash', name: 'Crash', color: 'text-red-500', icon: 'trending-up', desc: 'Cash out before it crashes.' },
                     { id: 'mines', name: 'Mines', color: 'text-emerald-500', icon: 'bomb', desc: 'Avoid the bombs, find the gems.' },
-                    { id: 'roulette', name: 'Roulette', color: 'text-purple-500', icon: 'disc', desc: 'Red, Black, or Green.' },
+                    { id: 'blackjack', name: 'Blackjack', color: 'text-slate-200', icon: 'club', desc: 'Beat the dealer to 21.' },
                     { id: 'jackpot', name: 'Jackpot', color: 'text-amber-500', icon: 'pie-chart', desc: 'Winner takes all.' }
                 ];
                 
@@ -583,7 +768,7 @@
                         <h1 class="text-5xl font-black italic text-white mb-2">MINIGAMES</h1>
                         <p class="text-slate-500 uppercase tracking-widest">High Risk, High Reward</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
                         ${games.map(g => `
                         <div onclick="router.navigate('${g.id}')" class="bg-zinc-900 border border-zinc-800 p-8 rounded-2xl hover:border-amber-500 cursor-pointer group transition relative overflow-hidden">
                             <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
@@ -598,53 +783,142 @@
                 `;
             },
 
-            roulette: (container) => {
+            casebattle: (container) => {
                 container.innerHTML = `
-                    <div class="max-w-4xl mx-auto">
-                         <div class="flex items-center gap-4 mb-6">
-                            <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
-                            <h1 class="text-3xl font-black italic text-white">ROULETTE</h1>
-                        </div>
-
-                        <div class="spinner-container relative mb-8 border-2 border-amber-600">
-                            <div class="center-line z-30"></div>
-                            <div class="items-strip" id="roulette-strip"></div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                            <div class="bg-zinc-900 p-4 rounded-xl border border-zinc-800">
-                                <div class="text-xs text-slate-500 font-bold uppercase mb-2">Bet Amount</div>
-                                <div class="flex items-center bg-black border border-zinc-700 rounded px-3 py-2">
-                                    <span class="text-emerald-500 mr-2">$</span>
-                                    <input type="number" id="roul-bet" value="10" class="bg-transparent text-white font-bold w-full outline-none">
-                                </div>
+                    <div class="max-w-7xl mx-auto">
+                         <div class="flex items-center justify-between gap-4 mb-6">
+                            <div class="flex items-center gap-4">
+                                <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
+                                <h1 class="text-3xl font-black italic text-white">CASE BATTLE</h1>
                             </div>
-                             <div class="md:col-span-2 bg-zinc-900 p-4 rounded-xl border border-zinc-800 flex items-center justify-between">
-                                <div class="text-slate-400 text-sm">Last 5:</div>
-                                <div class="flex gap-2" id="roul-history">
-                                    <span class="w-8 h-8 rounded bg-red-500"></span>
-                                    <span class="w-8 h-8 rounded bg-black border border-zinc-700"></span>
+                            <div class="flex items-center gap-4">
+                                <select id="battle-mode" class="bg-zinc-900 border border-zinc-700 text-white rounded-lg px-4 py-2 font-bold outline-none focus:border-amber-500">
+                                    <option value="normal">Normal (High Wins)</option>
+                                    <option value="underdog">Underdog (Low Wins)</option>
+                                    <option value="jackpot">Jackpot (Share Win)</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <div id="battle-create" class="bg-zinc-900 p-6 rounded-2xl border border-zinc-800 mb-8">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-white font-bold uppercase">Select Cases (Max 10)</h3>
+                                <div class="text-amber-500 font-mono font-bold text-xl" id="battle-total-cost">$0.00</div>
+                            </div>
+                            
+                            <div class="flex gap-2 overflow-x-auto min-h-[100px] bg-black/50 p-2 rounded-lg mb-6" id="battle-selected-list">
+                                <div class="text-slate-500 text-sm m-auto">Click cases below to add...</div>
+                            </div>
+                            
+                            <button onclick="caseBattle.start()" class="w-full bg-amber-600 hover:bg-amber-500 text-black font-black text-xl py-4 rounded-xl transition uppercase mb-8">START BATTLE</button>
+
+                            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
+                                ${DB.cases.map(c => `
+                                    <div onclick="caseBattle.addCase('${c.id}')" class="bg-zinc-800 p-2 rounded-lg border border-zinc-700 hover:border-amber-500 cursor-pointer group relative">
+                                        <div class="absolute top-2 right-2 text-emerald-400 text-xs font-bold font-mono">${ui.formatMoney(c.price)}</div>
+                                        <div class="h-20 flex items-center justify-center mb-2"><img src="${c.image}" class="h-16 object-contain group-hover:scale-110 transition"></div>
+                                        <div class="text-xs font-bold text-white text-center uppercase truncate">${c.name}</div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        </div>
+
+                        <div id="battle-arena" class="hidden">
+                             <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div class="bg-zinc-900 border border-zinc-700 p-4 rounded-xl flex justify-between items-center relative overflow-hidden">
+                                    <div class="z-10">
+                                        <div class="text-xs text-slate-500 font-bold uppercase">You</div>
+                                        <div class="text-2xl font-black text-white" id="battle-player-name">${server.state.username}</div>
+                                    </div>
+                                    <div class="z-10 text-right">
+                                        <div class="text-xs text-slate-500 font-bold uppercase">Total</div>
+                                        <div class="text-2xl font-black text-emerald-400 font-mono" id="battle-player-total">$0.00</div>
+                                    </div>
+                                    <div id="battle-player-status" class="absolute inset-0 bg-emerald-500/20 hidden flex items-center justify-center font-black text-4xl text-emerald-500 -rotate-6 border-4 border-emerald-500 z-20">WINNER</div>
+                                </div>
+                                <div class="bg-zinc-900 border border-zinc-700 p-4 rounded-xl flex justify-between items-center relative overflow-hidden">
+                                     <div class="z-10">
+                                        <div class="text-xs text-slate-500 font-bold uppercase">Opponent</div>
+                                        <div class="text-2xl font-black text-slate-300">BOT_Tuti</div>
+                                    </div>
+                                    <div class="z-10 text-right">
+                                        <div class="text-xs text-slate-500 font-bold uppercase">Total</div>
+                                        <div class="text-2xl font-black text-emerald-400 font-mono" id="battle-bot-total">$0.00</div>
+                                    </div>
+                                    <div id="battle-bot-status" class="absolute inset-0 bg-emerald-500/20 hidden flex items-center justify-center font-black text-4xl text-emerald-500 -rotate-6 border-4 border-emerald-500 z-20">WINNER</div>
                                 </div>
                              </div>
-                        </div>
 
-                        <div class="grid grid-cols-3 gap-4">
-                            <button onclick="rouletteGame.play('red')" id="btn-r-red" class="py-6 rounded-xl bg-red-600 hover:bg-red-500 text-white font-black text-2xl uppercase transition relative overflow-hidden group">
-                                Win 2x
-                                <div class="text-sm font-normal opacity-75">Red (1-7)</div>
-                            </button>
-                             <button onclick="rouletteGame.play('green')" id="btn-r-green" class="py-6 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-black text-2xl uppercase transition relative overflow-hidden group">
-                                Win 14x
-                                <div class="text-sm font-normal opacity-75">Green (0)</div>
-                            </button>
-                             <button onclick="rouletteGame.play('black')" id="btn-r-black" class="py-6 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white font-black text-2xl uppercase transition relative overflow-hidden group">
-                                Win 2x
-                                <div class="text-sm font-normal opacity-75">Black (8-14)</div>
-                            </button>
+                             <div class="grid grid-cols-2 gap-4 mb-4" id="battle-spinners-row">
+                                <div class="spinner-container battle-spinner">
+                                    <div class="spinner-overlay-left"></div><div class="spinner-overlay-right"></div><div class="center-line"></div>
+                                    <div class="items-strip" id="battle-strip-p"></div>
+                                </div>
+                                <div class="spinner-container battle-spinner">
+                                    <div class="spinner-overlay-left"></div><div class="spinner-overlay-right"></div><div class="center-line"></div>
+                                    <div class="items-strip" id="battle-strip-b"></div>
+                                </div>
+                             </div>
+
+                             <div class="grid grid-cols-2 gap-4">
+                                <div class="space-y-2" id="battle-history-p"></div>
+                                <div class="space-y-2" id="battle-history-b"></div>
+                             </div>
+                             
+                             <button onclick="router.navigate('casebattle')" id="battle-reset-btn" class="hidden w-full mt-8 bg-zinc-800 hover:bg-zinc-700 text-white font-bold py-4 rounded-xl uppercase">New Battle</button>
                         </div>
                     </div>
                 `;
-                rouletteGame.init();
+                caseBattle.init();
+            },
+
+            blackjack: (container) => {
+                container.innerHTML = `
+                    <div class="max-w-4xl mx-auto select-none">
+                         <div class="flex items-center gap-4 mb-6">
+                            <button onclick="router.navigate('minigames')" class="text-slate-500 hover:text-white"><i data-lucide="arrow-left"></i></button>
+                            <h1 class="text-3xl font-black italic text-white">BLACKJACK</h1>
+                        </div>
+
+                        <div class="bg-[#151a15] rounded-[30px] border-[8px] border-[#382e1c] p-8 h-[500px] relative flex flex-col justify-between shadow-2xl relative overflow-hidden">
+                             <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,_#204020_0%,_#102010_100%)] opacity-80 pointer-events-none"></div>
+
+                             <div class="relative z-10 flex flex-col items-center">
+                                <div class="text-slate-400 font-bold uppercase text-xs mb-2">Dealer</div>
+                                <div class="flex gap-[-20px]" id="bj-dealer-hand"></div>
+                                <div class="mt-2 text-white font-mono font-bold" id="bj-dealer-score"></div>
+                             </div>
+
+                             <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-center z-20 pointer-events-none">
+                                <h2 class="text-5xl font-black italic text-white/10 uppercase">Blackjack</h2>
+                                <div id="bj-result" class="text-3xl font-bold uppercase text-white drop-shadow-md hidden mt-4">WIN</div>
+                             </div>
+
+                             <div class="relative z-10 flex flex-col items-center">
+                                <div class="mb-2 text-white font-mono font-bold" id="bj-player-score"></div>
+                                <div class="flex gap-[-20px]" id="bj-player-hand"></div>
+                                <div class="text-slate-400 font-bold uppercase text-xs mt-2">You</div>
+                             </div>
+                        </div>
+
+                        <div class="mt-6 flex flex-col items-center gap-4">
+                            <div class="flex items-center gap-4 bg-zinc-900 p-2 rounded-xl border border-zinc-800" id="bj-bet-panel">
+                                <div class="text-xs font-bold text-slate-500 uppercase px-2">Bet</div>
+                                <div class="flex items-center bg-black border border-zinc-700 rounded px-3 py-2">
+                                    <span class="text-emerald-500 mr-2">$</span>
+                                    <input type="number" id="bj-bet" value="20" class="bg-transparent text-white font-bold w-16 outline-none text-center">
+                                </div>
+                                <button onclick="blackjackGame.deal()" class="bg-amber-600 hover:bg-amber-500 text-black px-8 py-3 rounded-lg font-black uppercase transition">DEAL</button>
+                            </div>
+
+                            <div class="hidden flex gap-4" id="bj-actions">
+                                <button onclick="blackjackGame.hit()" class="bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700 px-8 py-4 rounded-xl font-bold uppercase transition w-32">Hit</button>
+                                <button onclick="blackjackGame.stand()" class="bg-amber-600 hover:bg-amber-500 text-black px-8 py-4 rounded-xl font-bold uppercase transition w-32">Stand</button>
+                                <button onclick="blackjackGame.double()" id="bj-btn-double" class="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-xl font-bold uppercase transition w-32">Double</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
             },
 
             jackpot: (container) => {
@@ -844,7 +1118,7 @@
                 container.innerHTML = `
                     <div class="flex justify-between items-center mb-6 pb-4 border-b border-zinc-800">
                         <h2 class="text-3xl font-black text-white">INVENTORY <span class="text-sm text-slate-500 ml-2">(${server.state.inventory.length})</span></h2>
-                        <span class="text-emerald-400 font-mono text-xl font-bold">${ui.formatMoney(total)}</span>
+                        <span class="text-emerald-400 font-mono text-2xl font-bold">${ui.formatMoney(total)}</span>
                     </div>
                     <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-4">
                         ${server.state.inventory.slice().reverse().map(i => `
@@ -911,83 +1185,331 @@
             }
         };
 
-        // --- GAME LOGIC: ROULETTE ---
-        const rouletteGame = {
-            history: [1, 14, 3, 0, 9],
-            spinning: false,
-            
+        // --- GAME LOGIC: CASE BATTLE ---
+        const caseBattle = {
+            selectedCases: [],
+            active: false,
+            playerTotal: 0,
+            botTotal: 0,
+
             init: () => {
-                rouletteGame.renderStrip();
-                rouletteGame.updateHistory();
+                caseBattle.selectedCases = [];
+                caseBattle.active = false;
+                caseBattle.updateSelectionUI();
             },
 
-            renderStrip: () => {
-                const strip = document.getElementById('roulette-strip');
-                let html = '';
-                // Generate a repeated pattern of 15 tiles (0-14)
-                for(let i=0; i<10; i++) {
-                    for(let n=0; n<=14; n++) {
-                         let color = n === 0 ? 'roul-green' : (n <= 7 ? 'roul-red' : 'roul-black');
-                         html += `<div class="w-[75px] h-[75px] flex-shrink-0 mx-0.5 rounded ${color} flex items-center justify-center font-bold text-xl">${n}</div>`;
+            addCase: (caseId) => {
+                if(caseBattle.active || caseBattle.selectedCases.length >= 10) return;
+                const c = DB.cases.find(x => x.id === caseId);
+                caseBattle.selectedCases.push(c);
+                caseBattle.updateSelectionUI();
+            },
+
+            removeCase: (index) => {
+                if(caseBattle.active) return;
+                caseBattle.selectedCases.splice(index, 1);
+                caseBattle.updateSelectionUI();
+            },
+
+            updateSelectionUI: () => {
+                const list = document.getElementById('battle-selected-list');
+                const totalEl = document.getElementById('battle-total-cost');
+                if(!list) return;
+
+                if(caseBattle.selectedCases.length === 0) {
+                    list.innerHTML = `<div class="text-slate-500 text-sm m-auto">Click cases below to add...</div>`;
+                    totalEl.innerText = "$0.00";
+                    return;
+                }
+
+                const total = caseBattle.selectedCases.reduce((a,b) => a + b.price, 0);
+                totalEl.innerText = ui.formatMoney(total);
+
+                list.innerHTML = caseBattle.selectedCases.map((c, i) => `
+                    <div onclick="caseBattle.removeCase(${i})" class="relative min-w-[80px] h-[100px] bg-zinc-800 border border-zinc-700 rounded flex flex-col items-center justify-center cursor-pointer hover:bg-red-900/50 transition group">
+                        <img src="${c.image}" class="h-10 mb-1 object-contain">
+                        <span class="text-[10px] font-bold text-slate-300 truncate w-full text-center px-1">${c.name}</span>
+                        <div class="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 rounded text-red-500"><i data-lucide="x"></i></div>
+                    </div>
+                `).join('');
+                lucide.createIcons();
+            },
+
+            start: async () => {
+                if(caseBattle.selectedCases.length === 0) return alert("Select at least 1 case!");
+                const cost = caseBattle.selectedCases.reduce((a,b) => a + b.price, 0);
+                
+                if(!server.processBet(cost)) return alert("Insufficient Funds");
+
+                // Setup UI
+                caseBattle.active = true;
+                document.getElementById('battle-create').classList.add('hidden');
+                document.getElementById('battle-arena').classList.remove('hidden');
+                caseBattle.playerTotal = 0;
+                caseBattle.botTotal = 0;
+                document.getElementById('battle-player-total').innerText = "$0.00";
+                document.getElementById('battle-bot-total').innerText = "$0.00";
+                
+                // Pre-calculate results for seamless flow
+                const rounds = [];
+                for(let c of caseBattle.selectedCases) {
+                    rounds.push({
+                        caseData: c,
+                        playerDrop: server.calculateCaseDrop(c.id),
+                        botDrop: server.calculateCaseDrop(c.id) // Bot also simulates a drop
+                    });
+                }
+
+                // Execute Rounds sequentially
+                for(let i=0; i<rounds.length; i++) {
+                    await caseBattle.playRound(rounds[i]);
+                }
+
+                // Determine Winner
+                caseBattle.determineWinner(rounds);
+                document.getElementById('battle-reset-btn').classList.remove('hidden');
+            },
+
+            playRound: async (roundData) => {
+                const stripP = document.getElementById('battle-strip-p');
+                const stripB = document.getElementById('battle-strip-b');
+                
+                // 1. Generate strips for this round
+                game.generateStrip(roundData.caseData, 'battle-strip-p');
+                game.generateStrip(roundData.caseData, 'battle-strip-b');
+
+                // 2. Setup Landing (similar to standard opening but synched)
+                const spin = (strip, item) => {
+                    const cardWidth = 118; // 110 + 8 margin
+                    const landIndex = 60; 
+                    const offset = (landIndex * cardWidth) - (strip.parentElement.offsetWidth / 2) + (110/2);
+                    const jitter = Math.floor(Math.random() * 40) - 20;
+
+                    // Set winning item visually
+                    const visItem = strip.children[landIndex];
+                    visItem.innerHTML = `<div class="relative z-10 scale-110 drop-shadow-2xl">${DB.renderItem(item, "w-20 h-16")}</div>`;
+                    visItem.className = `w-[110px] h-[120px] flex-shrink-0 mx-1 bg-[#151515] border-b-4 rarity-${item.rarity} flex flex-col items-center justify-center rounded-lg relative overflow-hidden shadow-[0_0_30px_rgba(0,0,0,0.5)] z-20 transform scale-105`;
+
+                    strip.style.transition = 'transform 3s cubic-bezier(0.1, 0, 0.05, 1)';
+                    strip.style.transform = `translateX(-${offset + jitter}px)`;
+                };
+
+                // Spin both
+                // Force reflow
+                stripP.offsetWidth; 
+                spin(stripP, roundData.playerDrop);
+                spin(stripB, roundData.botDrop);
+
+                await Utils.sleep(3500); // Wait for spin
+
+                // Add to totals
+                caseBattle.playerTotal += roundData.playerDrop.price;
+                caseBattle.botTotal += roundData.botDrop.price;
+                
+                document.getElementById('battle-player-total').innerText = ui.formatMoney(caseBattle.playerTotal);
+                document.getElementById('battle-bot-total').innerText = ui.formatMoney(caseBattle.botTotal);
+
+                // Add to history
+                const addToHistory = (id, item) => {
+                     document.getElementById(id).innerHTML += `
+                        <div class="flex items-center gap-2 bg-zinc-800 p-2 rounded border border-zinc-700 pop-in">
+                            ${DB.renderItem(item, "w-10 h-8")}
+                            <div class="text-[10px] text-white truncate flex-1">${item.name}</div>
+                            <div class="text-emerald-400 font-mono text-xs">${ui.formatMoney(item.price)}</div>
+                        </div>
+                     `;
+                }
+                addToHistory('battle-history-p', roundData.playerDrop);
+                addToHistory('battle-history-b', roundData.botDrop);
+            },
+
+            determineWinner: (rounds) => {
+                const mode = document.getElementById('battle-mode').value;
+                let playerWins = false;
+
+                if (mode === 'normal') {
+                    playerWins = caseBattle.playerTotal > caseBattle.botTotal;
+                    if(caseBattle.playerTotal === caseBattle.botTotal) playerWins = Math.random() > 0.5; // Coin flip on tie
+                } else if (mode === 'underdog') {
+                     // Lowest value wins
+                    playerWins = caseBattle.playerTotal < caseBattle.botTotal;
+                    if(caseBattle.playerTotal === caseBattle.botTotal) playerWins = Math.random() > 0.5;
+                } else if (mode === 'jackpot') {
+                    const totalPot = caseBattle.playerTotal + caseBattle.botTotal;
+                    if (totalPot === 0) {
+                        playerWins = Math.random() > 0.5;
+                    } else {
+                        const playerChance = caseBattle.playerTotal / totalPot;
+                        playerWins = Math.random() < playerChance;
                     }
                 }
-                strip.innerHTML = html;
+
+                // Payout
+                if(playerWins) {
+                    // Winner takes all skins
+                    let winnings = 0;
+                    rounds.forEach(r => {
+                        winnings += r.playerDrop.price;
+                        winnings += r.botDrop.price;
+                        server.state.inventory.push(r.playerDrop);
+                        server.state.inventory.push(r.botDrop); // Get bot's skins too
+                    });
+                    server.saveState();
+                    document.getElementById('battle-player-status').classList.remove('hidden');
+                    alert(`YOU WON THE BATTLE! Added ${ui.formatMoney(winnings)} worth of items to inventory.`);
+                } else {
+                    document.getElementById('battle-bot-status').classList.remove('hidden');
+                    // Player items were not added to inventory during loop (only calculated), so they are lost.
+                    // Actually, the server.calculateCaseDrop generates an item but doesn't add to DB.
+                    // So we are good. Lost is lost.
+                }
+            }
+        };
+
+        // --- GAME LOGIC: BLACKJACK ---
+        const blackjackGame = {
+            active: false,
+            deck: [],
+            dealerHand: [],
+            playerHand: [],
+            bet: 0,
+            suits: ['♠', '♥', '♣', '♦'],
+            values: ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'],
+
+            createDeck: () => {
+                const deck = [];
+                for(let suit of blackjackGame.suits) {
+                    for(let val of blackjackGame.values) {
+                        deck.push({ suit, val, weight: blackjackGame.getWeight(val) });
+                    }
+                }
+                return deck.sort(() => Math.random() - 0.5);
             },
 
-            updateHistory: () => {
-                const hist = document.getElementById('roul-history');
-                if(hist) {
-                    hist.innerHTML = rouletteGame.history.slice(-5).map(n => {
-                        let color = n === 0 ? 'bg-emerald-500' : (n <= 7 ? 'bg-red-500' : 'bg-zinc-700');
-                        return `<span class="w-8 h-8 rounded flex items-center justify-center text-xs font-bold ${color} text-white">${n}</span>`;
-                    }).join('');
+            getWeight: (val) => {
+                if(val === 'A') return 11;
+                if(['J','Q','K'].includes(val)) return 10;
+                return parseInt(val);
+            },
+
+            deal: () => {
+                const betInput = document.getElementById('bj-bet');
+                const amount = parseFloat(betInput.value);
+                if(isNaN(amount) || amount <= 0) return alert("Invalid bet");
+                if(!server.processBet(amount)) return alert("Insufficient funds");
+
+                blackjackGame.bet = amount;
+                blackjackGame.active = true;
+                blackjackGame.deck = blackjackGame.createDeck();
+                blackjackGame.playerHand = [blackjackGame.deck.pop(), blackjackGame.deck.pop()];
+                blackjackGame.dealerHand = [blackjackGame.deck.pop(), blackjackGame.deck.pop()];
+
+                document.getElementById('bj-bet-panel').classList.add('hidden');
+                document.getElementById('bj-actions').classList.remove('hidden');
+                document.getElementById('bj-btn-double').classList.remove('hidden');
+                document.getElementById('bj-result').classList.add('hidden');
+                
+                blackjackGame.updateUI(false);
+                if(blackjackGame.getScore(blackjackGame.playerHand) === 21) blackjackGame.endGame(true);
+            },
+
+            hit: () => {
+                if(!blackjackGame.active) return;
+                document.getElementById('bj-btn-double').classList.add('hidden');
+                blackjackGame.playerHand.push(blackjackGame.deck.pop());
+                blackjackGame.updateUI(false);
+                if(blackjackGame.getScore(blackjackGame.playerHand) > 21) blackjackGame.endGame(false); 
+            },
+
+            stand: () => {
+                if(!blackjackGame.active) return;
+                let dealerScore = blackjackGame.getScore(blackjackGame.dealerHand);
+                while(dealerScore < 17) {
+                    blackjackGame.dealerHand.push(blackjackGame.deck.pop());
+                    dealerScore = blackjackGame.getScore(blackjackGame.dealerHand);
+                }
+                const playerScore = blackjackGame.getScore(blackjackGame.playerHand);
+                if(dealerScore > 21 || playerScore > dealerScore) blackjackGame.endGame(true);
+                else if(playerScore === dealerScore) blackjackGame.endGame('push');
+                else blackjackGame.endGame(false);
+            },
+
+            double: () => {
+                if(server.processBet(blackjackGame.bet)) {
+                    blackjackGame.bet *= 2;
+                    blackjackGame.playerHand.push(blackjackGame.deck.pop());
+                    blackjackGame.updateUI(false);
+                    if(blackjackGame.getScore(blackjackGame.playerHand) > 21) blackjackGame.endGame(false);
+                    else blackjackGame.stand();
+                } else {
+                    alert("Not enough funds to double");
                 }
             },
 
-            play: (colorChoice) => {
-                if(rouletteGame.spinning) return;
-                const bet = parseFloat(document.getElementById('roul-bet').value);
-                if(isNaN(bet) || bet <= 0) return alert("Invalid Bet");
-                if(!server.processBet(bet)) return alert("Insufficient Funds");
+            getScore: (hand) => {
+                let score = 0;
+                let aces = 0;
+                for(let c of hand) {
+                    score += c.weight;
+                    if(c.val === 'A') aces++;
+                }
+                while(score > 21 && aces > 0) {
+                    score -= 10;
+                    aces--;
+                }
+                return score;
+            },
 
-                rouletteGame.spinning = true;
-                ['btn-r-red', 'btn-r-green', 'btn-r-black'].forEach(id => document.getElementById(id).classList.add('opacity-50', 'pointer-events-none'));
+            updateUI: (reveal) => {
+                const renderCard = (c, hidden) => {
+                    if(hidden) return `<div class="playing-card bg-amber-900 border-2 border-amber-700 !bg-[radial-gradient(#333_1px,transparent_1px)] [background-size:8px_8px]"><div class="card-center">?</div></div>`;
+                    const color = (c.suit === '♥' || c.suit === '♦') ? 'suit-red' : 'suit-black';
+                    return `
+                        <div class="playing-card ${color} transform transition-transform hover:-translate-y-2 ml-[-40px] first:ml-0 border border-slate-300">
+                            <div class="text-lg leading-none">${c.val}</div>
+                            <div class="card-center text-3xl">${c.suit}</div>
+                            <div class="text-lg leading-none self-end transform rotate-180">${c.val}</div>
+                        </div>`;
+                };
 
-                // Logic
-                const roll = Math.floor(Math.random() * 15); // 0-14
+                document.getElementById('bj-player-hand').innerHTML = blackjackGame.playerHand.map(c => renderCard(c)).join('');
+                document.getElementById('bj-player-score').innerText = blackjackGame.getScore(blackjackGame.playerHand);
+
+                // Dealer
+                if(reveal) {
+                    document.getElementById('bj-dealer-hand').innerHTML = blackjackGame.dealerHand.map(c => renderCard(c)).join('');
+                    document.getElementById('bj-dealer-score').innerText = blackjackGame.getScore(blackjackGame.dealerHand);
+                } else {
+                    document.getElementById('bj-dealer-hand').innerHTML = renderCard(blackjackGame.dealerHand[0]) + renderCard(null, true);
+                    document.getElementById('bj-dealer-score').innerText = blackjackGame.getWeight(blackjackGame.dealerHand[0].val);
+                }
+            },
+
+            endGame: (result) => {
+                blackjackGame.active = false;
+                blackjackGame.updateUI(true); // Reveal dealer
                 
-                // Animate
-                const strip = document.getElementById('roulette-strip');
-                const cardWidth = 79; // 75 + 4 margin
-                // Land somewhere in the middle sets (set 7 out of 10)
-                const setIndex = 7;
-                const offset = (setIndex * 15 * cardWidth) + (roll * cardWidth) - (strip.parentElement.offsetWidth / 2) + (75/2);
-                const jitter = Math.floor(Math.random() * 40) - 20;
+                const resEl = document.getElementById('bj-result');
+                resEl.classList.remove('hidden');
                 
-                strip.style.transition = 'transform 4s cubic-bezier(0.1, 0, 0.05, 1)';
-                strip.style.transform = `translateX(-${offset + jitter}px)`;
+                if(result === true) {
+                    const win = blackjackGame.bet * 2;
+                    server.addWin(win);
+                    resEl.innerText = `YOU WON $${win.toFixed(2)}`;
+                    resEl.classList.add('text-emerald-500'); resEl.classList.remove('text-red-500', 'text-slate-300');
+                } else if (result === 'push') {
+                    server.addWin(blackjackGame.bet);
+                    resEl.innerText = "PUSH (TIE)";
+                    resEl.classList.add('text-slate-300'); resEl.classList.remove('text-red-500', 'text-emerald-500');
+                } else {
+                    resEl.innerText = "DEALER WINS";
+                    resEl.classList.add('text-red-500'); resEl.classList.remove('text-emerald-500', 'text-slate-300');
+                }
 
+                document.getElementById('bj-actions').classList.add('hidden');
                 setTimeout(() => {
-                    let won = false;
-                    let multiplier = 0;
-
-                    if(roll === 0 && computerChoice === 'green') { won = true; multiplier = 14; }
-                    else if(roll >= 1 && roll <= 7 && computerChoice === 'red') { won = true; multiplier = 2; }
-                    else if(roll >= 8 && roll <= 14 && computerChoice === 'black') { won = true; multiplier = 2; }
-
-                    if(won) {
-                        const profit = bet * multiplier;
-                        server.addWin(profit);
-                        alert(`You WON $${profit.toFixed(2)}!`);
-                    }
-
-                    rouletteGame.history.push(roll);
-                    rouletteGame.updateHistory();
-                    rouletteGame.spinning = false;
-                    strip.style.transition = 'none';
-                    strip.style.transform = 'translateX(0px)';
-                    ['btn-r-red', 'btn-r-green', 'btn-r-black'].forEach(id => document.getElementById(id).classList.remove('opacity-50', 'pointer-events-none'));
-                }, 4100);
+                    document.getElementById('bj-bet-panel').classList.remove('hidden');
+                }, 2000);
             }
         };
 
